@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Field notes: a real OpenClaw setup with three agents on a home PC, everything that broke, what paid off, and Jev used on all ten levels.">
+<title>Our Setup · Harness Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap">
+<style>
+/* Layout: field notes. A stack diagram of the real setup, an incident log (symptom, cause, fix, lesson), payoff tiles, and the ten-rung Jev ladder as the bold moment. */
+:root{
+  color-scheme:light;
+  --bg:#F1F2F4; --surface:#FFFFFF; --ink:#101217; --muted:#5A6070; --line:#D8DCE3; --soft:#E7EAEF;
+  --w-know:#2E62F0; --w-hands:#B67600; --w-rhythm:#0D8A62; --w-brain:#6E45F0; --w-control:#CF3B33;
+  --t-know:#E5ECFF; --t-hands:#FBEFD6; --t-rhythm:#DBF3EA; --t-brain:#ECE5FF; --t-control:#FBE3E1;
+  --ok:#0D8A62; --warn:#B67600; --open:#CF3B33;
+  --f-display:"Unbounded","Onest",system-ui,sans-serif;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:8px;
+  padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0C0E11; --surface:#15181E; --ink:#EDEFF3; --muted:#99A0AD; --line:#2A2F38; --soft:#1E222A;
+  --w-know:#7CA2FF; --w-hands:#F0B43C; --w-rhythm:#43CF9C; --w-brain:#A98CFF; --w-control:#FF7B70;
+  --t-know:#18223F; --t-hands:#31260E; --t-rhythm:#0E2C22; --t-brain:#231C40; --t-control:#381917;
+  --ok:#43CF9C; --warn:#F0B43C; --open:#FF7B70;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0C0E11; --surface:#15181E; --ink:#EDEFF3; --muted:#99A0AD; --line:#2A2F38; --soft:#1E222A;
+  --w-know:#7CA2FF; --w-hands:#F0B43C; --w-rhythm:#43CF9C; --w-brain:#A98CFF; --w-control:#FF7B70;
+  --t-know:#18223F; --t-hands:#31260E; --t-rhythm:#0E2C22; --t-brain:#231C40; --t-control:#381917;
+  --ok:#43CF9C; --warn:#F0B43C; --open:#FF7B70;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--f-body);padding-inline:20px;padding-block:0 40px;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.015em}
+h2{font-size:clamp(26px,3.6vw,40px)}
+h3{font-size:17px}
+p{margin:0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.eyebrow{font:600 12px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:18px}
+.brand{display:flex;align-items:center;gap:10px;font:700 15px/1 var(--f-display);color:inherit;text-decoration:none}
+.mark{display:flex;gap:3px}
+.mark i{width:4px;height:18px;border-radius:2px}
+.top nav{display:flex;align-items:center;gap:20px;font-size:14px}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover,.top nav a[aria-current="page"]{color:var(--ink)}
+.lang{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
+.lang button{appearance:none;border:0;background:transparent;color:var(--muted);font:700 12px/1 var(--f-mono);letter-spacing:.06em;padding:7px 11px;border-radius:999px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 7px;border-radius:5px;font:700 11px/1 var(--f-mono);letter-spacing:.03em;white-space:nowrap}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.L-know{color:var(--w-know);background:var(--t-know)}
+.L-hands{color:var(--w-hands);background:var(--t-hands)}
+.L-rhythm{color:var(--w-rhythm);background:var(--t-rhythm)}
+.L-brain{color:var(--w-brain);background:var(--t-brain)}
+.L-control{color:var(--w-control);background:var(--t-control)}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+
+/* hero */
+.hero{padding-block:36px 48px;display:grid;gap:28px}
+.hero h1{font-size:clamp(34px,5.6vw,68px);max-width:16ch}
+.hero .lede{font-size:19px;color:var(--muted);max-width:56ch}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.stat{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:16px;display:grid;gap:6px;align-content:start}
+.stat b{font:700 clamp(26px,3vw,36px)/1 var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:13.5px;color:var(--muted);line-height:1.35}
+
+section{padding-block:60px;border-top:1px solid var(--line)}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px 32px;margin-bottom:28px}
+.head p{max-width:52ch}
+
+/* stack diagram */
+.stack{display:grid;gap:8px}
+.layer{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:stretch}
+.layer>.lname{font:700 11.5px/1.3 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:14px}
+.boxes{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.box{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 14px;display:grid;gap:4px;align-content:start;position:relative}
+.box b{font-weight:600;font-size:15px}
+.box span{font-size:13px;color:var(--muted);line-height:1.4}
+.box.hl{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.box .dot{position:absolute;top:12px;right:12px;width:8px;height:8px;border-radius:50%}
+.pipe{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px}
+.pipe i{display:block;height:10px;border-left:2px dashed var(--line);margin-left:50%}
+
+/* incidents */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 14px/1 var(--f-body);padding:9px 13px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.incidents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.inc{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:20px;display:grid;gap:14px;align-content:start}
+.inc-h{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.inc h3{font-size:18px;line-height:1.2}
+.pill{font:700 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 8px;border-radius:999px;white-space:nowrap;border:1px solid currentColor}
+.pill.fixed{color:var(--ok)} .pill.workaround{color:var(--warn)} .pill.open{color:var(--open)}
+.sym{font:600 16px/1.35 var(--f-body)}
+.sym::before{content:"“";color:var(--muted);font-family:var(--f-display)}
+.sym::after{content:"”";color:var(--muted);font-family:var(--f-display)}
+.rows{display:grid;gap:10px;margin:0}
+.rows div{display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px;font-size:14.5px}
+.rows dt{font:700 11px/1.7 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rows dd{margin:0}
+.lesson{border-top:1px dashed var(--line);padding-top:12px;font-size:14.5px;font-weight:600}
+.lesson::before{content:"→ ";color:var(--muted)}
+.inc .num{font:700 13px/1 var(--f-mono);color:var(--ink);background:var(--soft);padding:4px 7px;border-radius:4px}
+
+/* boosts */
+.boosts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.boost{border-radius:var(--r);padding:22px;display:grid;gap:10px;align-content:start;background:var(--tint);border:1px solid color-mix(in srgb,var(--wire) 30%,transparent)}
+.boost b{font:700 20px/1.15 var(--f-display);color:var(--ink)}
+.boost p{font-size:14.5px}
+.boost .k{font:700 11px/1 var(--f-mono);letter-spacing:.08em;color:var(--wire)}
+
+/* jev ladder */
+.jev-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;margin-bottom:28px}
+.jev-intro .formula{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:16px;font:600 13px/1.7 var(--f-mono);overflow-x:auto;white-space:pre}
+.ladder{display:grid;gap:6px}
+.rung{display:grid;grid-template-columns:64px minmax(0,1.1fr) minmax(0,1.6fr) 150px;gap:16px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px 16px;margin-left:calc((10 - var(--i)) * 1.4%)}
+.rung .n{font:700 28px/1 var(--f-display);color:var(--muted)}
+.rung h3{font-size:15.5px}
+.rung h3 small{display:block;font:500 12.5px/1.3 var(--f-body);color:var(--muted);margin-top:3px}
+.rung p{font-size:14.5px}
+.rung .where{font:700 11px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:right}
+.rung.top{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.rung.top .n,.rung.top .where,.rung.top h3 small{color:inherit;opacity:.8}
+.extras{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:22px}
+.extra{border:1px dashed var(--line);border-radius:var(--r);padding:16px;display:grid;gap:6px;align-content:start}
+.extra b{font-weight:600}
+.extra span{font-size:13.5px;color:var(--muted)}
+.safety{margin-top:22px;display:flex;flex-wrap:wrap;gap:8px}
+.safety span{font-size:13.5px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px}
+
+/* lessons */
+.lessons{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 32px;counter-reset:ls}
+.lessons li{counter-increment:ls;display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding-block:16px;border-bottom:1px solid var(--line);font:600 17px/1.35 var(--f-body)}
+.lessons li::before{content:counter(ls,decimal-leading-zero);font:700 13px/1.9 var(--f-mono);color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding-block:24px 0;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted)}
+footer a{color:inherit}
+
+@media (max-width:980px){
+  .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .incidents,.jev-intro,.lessons{grid-template-columns:1fr}
+  .boosts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .extras{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rung{grid-template-columns:52px minmax(0,1fr);margin-left:0}
+  .rung p{grid-column:2}
+  .rung .where{grid-column:2;text-align:left}
+}
+@media (max-width:720px){
+  body{padding-inline:16px}
+  .top nav a{display:none}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .layer,.pipe{grid-template-columns:1fr;gap:6px}
+  .layer>.lname{padding-top:0}
+  .pipe{display:none}
+  .boxes{grid-auto-flow:row;grid-template-columns:1fr}
+  .boosts,.extras{grid-template-columns:1fr}
+  .rows div{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./"><span class="mark" aria-hidden="true"><i style="background:var(--w-know)"></i><i style="background:var(--w-hands)"></i><i style="background:var(--w-rhythm)"></i><i style="background:var(--w-brain)"></i><i style="background:var(--w-control)"></i></span>Harness Atlas</a>
+    <nav>
+      <a href="./" data-t="navAtlas"></a>
+      <a href="setup.html" aria-current="page" data-t="navSetup"></a>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" id="lang-en" aria-pressed="true">EN</button>
+        <button type="button" id="lang-ru" aria-pressed="false">RU</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <p class="eyebrow" data-t="heroEy"></p>
+    <h1 data-t="heroH"></h1>
+    <p class="lede" data-t="heroL"></p>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <section id="stack">
+    <div class="head"><h2 data-t="stackT"></h2><p class="muted" data-t="stackS"></p></div>
+    <div class="stack" id="stackGrid"></div>
+  </section>
+
+  <section id="incidents">
+    <div class="head"><h2 data-t="incT"></h2><p class="muted" data-t="incS"></p></div>
+    <div class="filters" id="filters"></div>
+    <div class="incidents" id="incGrid"></div>
+  </section>
+
+  <section id="boosts">
+    <div class="head"><h2 data-t="boostT"></h2></div>
+    <div class="boosts" id="boostGrid"></div>
+  </section>
+
+  <section id="jev">
+    <div class="jev-intro">
+      <div><p class="eyebrow">Jev · TypeSafe System One</p><h2 style="margin-top:12px" data-t="jevT"></h2><p class="muted" style="margin-top:16px;max-width:56ch" data-t="jevS"></p></div>
+      <div class="formula" id="jevFormula"></div>
+    </div>
+    <div class="ladder" id="ladder"></div>
+    <h3 style="margin-top:36px" data-t="extrasT"></h3>
+    <div class="extras" id="extras"></div>
+    <div class="safety" id="safety"></div>
+  </section>
+
+  <section id="lessons">
+    <div class="head"><h2 data-t="lessT"></h2></div>
+    <ol class="lessons" id="lessonList"></ol>
+  </section>
+
+  <footer>
+    <span data-t="foot"></span>
+    <span><a href="./" data-t="back"></a> · <a href="https://github.com/disler/ten-levels-of-jev" target="_blank" rel="noopener">ten-levels-of-jev</a></span>
+  </footer>
+</div>
+
+<script>
+const LAYER_OF = {CTX:"know",MEM:"know",KB:"know",TOOL:"hands",ACT:"hands",SKILL:"hands",AUTO:"rhythm",CHAN:"rhythm",ROUTE:"brain",MULTI:"brain",GUARD:"control",EVAL:"control"};
+const tag = id => `<span class="tag L-${LAYER_OF[id]}">${id}</span>`;
+
+const T = {
+  navAtlas:{en:"Atlas",ru:"Атлас"}, navSetup:{en:"Our setup",ru:"Наш сетап"},
+  heroEy:{en:"Field notes",ru:"Полевые заметки"},
+  heroH:{en:"How we actually run it.",ru:"Как это работает у нас."},
+  heroL:{en:"One home mini-PC, three agents, two model providers and a phone. Our OpenClaw setup, everything that broke, and what made it worth it.",ru:"Один домашний мини-ПК, три агента, два провайдера моделей и телефон. Наш сетап на OpenClaw: что ломалось и что дало буст."},
+  stackT:{en:"The stack",ru:"Как устроено"}, stackS:{en:"Top to bottom: where a message from the phone goes.",ru:"Сверху вниз: куда идёт сообщение с телефона."},
+  incT:{en:"What broke",ru:"Что ломалось"}, incS:{en:"Real incidents from the first two weeks. Symptom, cause, fix, lesson.",ru:"Реальные инциденты первых двух недель. Симптом, причина, решение, вывод."},
+  all:{en:"All",ru:"Все"}, fixed:{en:"Fixed",ru:"Решено"}, workaround:{en:"Workaround",ru:"Обходной путь"}, open:{en:"Open",ru:"Открыто"},
+  cause:{en:"Cause",ru:"Причина"}, fix:{en:"Fix",ru:"Решение"},
+  boostT:{en:"What paid off",ru:"Что дало буст"},
+  jevT:{en:"Jev on all ten levels",ru:"Jev на всех десяти уровнях"},
+  jevS:{en:"Jev answers typed questions about a state with probabilities, in well under a second, for a fraction of a cent. We put it on every rung of the ten-levels ladder, up to level 10, where the agent writes the questions itself.",ru:"Jev отвечает на типизированные вопросы о состоянии с вероятностями, меньше чем за секунду и за доли цента. Мы поставили его на каждую ступень лестницы ten-levels, вплоть до 10-й, где агент сам пишет вопросы."},
+  extrasT:{en:"Beyond the ladder: our own gates",ru:"Сверх лестницы: наши собственные гейты"},
+  lessT:{en:"What we'd tell ourselves on day one",ru:"Что бы мы сказали себе в первый день"},
+  foot:{en:"Harness Atlas · field notes · October 2026",ru:"Harness Atlas · полевые заметки · октябрь 2026"},
+  back:{en:"← Back to the atlas",ru:"← К атласу"}
+};
+
+const STATS = [
+  {n:"3", en:"agents, each with its own Telegram bot", ru:"агента, у каждого свой Telegram-бот"},
+  {n:"2", en:"model providers with automatic fallback", ru:"провайдера моделей с автопереключением"},
+  {n:"10/10", en:"Jev levels in daily use", ru:"уровней Jev в работе"},
+  {n:"71", en:"tests on the Jev layer", ru:"тест на слой Jev"},
+  {n:"21", en:"game builds by the agent in one day", ru:"сборка игры агентом за день"}
+];
+
+const STACK = [
+  {en:"Channel",ru:"Канал", boxes:[
+    {en:["Telegram","Three bots, one per project. Tasks from the phone."],ru:["Telegram","Три бота, по одному на проект. Задачи с телефона."],hl:1,c:"rhythm"},
+    {en:["Control UI","The gateway's own web dashboard."],ru:["Control UI","Собственный веб-дашборд гейтвея."]},
+    {en:["Desktop apps","Claude Code and Codex for hands-on work."],ru:["Десктоп","Claude Code и Codex для ручной работы."]}]},
+  {en:"Gateway",ru:"Гейтвей", boxes:[
+    {en:["OpenClaw gateway","On a home mini-PC (Windows), supervised by a scheduled task, localhost only."],ru:["Гейтвей OpenClaw","На домашнем мини-ПК (Windows), под присмотром планировщика, только localhost."],hl:1,c:"control"}]},
+  {en:"Agents",ru:"Агенты", boxes:[
+    {en:["Work","Day job. Its content never leaves for third-party judges."],ru:["Работа","Основная работа. Её данные не уходят сторонним сервисам."],c:"know"},
+    {en:["Ideas","Side projects and a board of bets."],ru:["Идеи","Сайд-проекты и доска гипотез."],c:"know"},
+    {en:["Planetarium","A personal Unreal game. The agent owns the editor."],ru:["Planetarium","Личная игра на Unreal. Редактором управляет агент."],c:"know"}]},
+  {en:"Plugins",ru:"Плагины", boxes:[
+    {en:["Writer lock","One writer per project at a time."],ru:["Writer lock","Один писатель на проект в момент времени."],c:"control"},
+    {en:["jev-guard","Destination check, memory gate, model router, auto-compaction."],ru:["jev-guard","Проверка адресата, гейт памяти, роутер моделей, автокомпакция."],hl:1,c:"control"}]},
+  {en:"Runtimes",ru:"Рантаймы", boxes:[
+    {en:["Claude CLI","Opus 5.5 as the primary model, on a subscription."],ru:["Claude CLI","Opus 5.5 как основная модель, по подписке."],c:"brain"},
+    {en:["Codex","GPT models as the fallback, also on a subscription."],ru:["Codex","Модели GPT как запасные, тоже по подписке."],c:"brain"}]},
+  {en:"Outside",ru:"Снаружи", boxes:[
+    {en:["Jev API","Cheap typed judgments. Non-work content only."],ru:["Jev API","Дешёвые типизированные решения. Только не рабочие данные."],c:"control"},
+    {en:["MCP servers","Task tracker, asset generation, the Unreal editor."],ru:["MCP-серверы","Трекер задач, генерация ассетов, редактор Unreal."],c:"hands"}]}
+];
+
+const INCIDENTS = [
+  {s:"fixed", b:["GUARD","CHAN"], en:{t:"Cross-project leak",sym:"The game agent posted into the work bot's chat.",cause:"The message tool resolved the active destination to another project's chat.",fix:"Message tools denied for that agent, plus a destination check in code: ownership first, then a Jev topic check.",lesson:"Isolation goes in code. A prompt saying “don't” is not a control."},
+   ru:{t:"Утечка между проектами",sym:"Игровой агент написал в чат рабочего бота.",cause:"Инструмент сообщений определил текущего адресата как чат другого проекта.",fix:"Инструменты сообщений запрещены этому агенту, плюс проверка адресата в коде: сначала принадлежность, потом тема через Jev.",lesson:"Изоляция делается в коде. Фраза «не делай» в промпте не защита."}},
+  {s:"fixed", b:["ROUTE","GUARD"], num:"1,148", en:{t:"A whole day on the fallback",sym:"Everything worked, but answers felt different.",cause:"The Claude CLI login had expired silently. 1,148 steps that day went to the fallback model.",fix:"Logged in again, and built a local dashboard that compares the configured model with the one that actually answered.",lesson:"Watch which model actually answered, not which one you configured."},
+   ru:{t:"Целый день на запасной модели",sym:"Всё работало, но ответы ощущались иначе.",cause:"Логин Claude CLI тихо истёк. 1 148 шагов за день ушли на запасную модель.",fix:"Перелогинились и сделали локальный дашборд: какая модель настроена и какая реально ответила.",lesson:"Смотри, какая модель реально ответила, а не какая настроена."}},
+  {s:"fixed", b:["ROUTE"], num:"94", en:{t:"A paid API through the back door",sym:"Errors about a low credit balance on a subscription-only setup.",cause:"No utility model was set, so helper calls defaulted to a small model through a pay-as-you-go API key with no credits. 94 failed calls in a day.",fix:"Set the utility model explicitly to a subscription model.",lesson:"Background helper calls pick a model too. Set it, or it picks for you."},
+   ru:{t:"Платный API через чёрный ход",sym:"Ошибки «мало кредитов» в сетапе только на подписках.",cause:"Служебная модель не была задана, и вспомогательные вызовы ушли на маленькую модель через платный API-ключ без кредитов. 94 ошибки за день.",fix:"Явно задали служебную модель из подписки.",lesson:"Вспомогательные вызовы тоже выбирают модель. Задай её сам."}},
+  {s:"workaround", b:["GUARD","AUTO"], num:"1.7 GB/h", en:{t:"The gateway that ate memory",sym:"Replies slowed down, then the gateway stopped answering at 7 GB.",cause:"An internal model-catalog worker grew by about 1.7 GB an hour. No setting controls it.",fix:"Restart with the safe mode that waits for running replies to finish. A memory watchdog and an upstream report are next.",lesson:"Any long-running daemon needs a memory alarm."},
+   ru:{t:"Гейтвей, который ел память",sym:"Ответы замедлились, потом гейтвей перестал отвечать на 7 ГБ.",cause:"Внутренний воркер каталога моделей рос примерно на 1,7 ГБ в час. Настройки на это нет.",fix:"Перезапуск в безопасном режиме, который ждёт завершения ответов. Дальше вочдог по памяти и репорт разработчикам.",lesson:"Любому долгоживущему демону нужна тревога по памяти."}},
+  {s:"workaround", b:["CHAN","MULTI"], num:"3 / 3", en:{t:"Finished, never delivered",sym:"A long task ran for minutes. The answer never arrived.",cause:"When the model used a background sub-agent, the channel's progress mode marked an interim answer as delivered and dropped the final one as a duplicate. 3 of 3 such runs were lost.",fix:"The answer was still saved in the session. Switching the channel's streaming mode avoids the bad path; reported upstream.",lesson:"Test long tasks end to end on the real channel, not only in the terminal."},
+   ru:{t:"Готово, но не доставлено",sym:"Долгая задача шла несколько минут. Ответ так и не пришёл.",cause:"Когда модель запускала фоновый субагент, режим прогресса в канале помечал промежуточный ответ как доставленный, а финальный отбрасывал как дубль. Потеряны 3 из 3 таких запусков.",fix:"Ответ сохранялся в сессии. Другой режим стриминга обходит баг; отправили репорт.",lesson:"Проверяй долгие задачи целиком через реальный канал, а не только в терминале."}},
+  {s:"open", b:["TOOL","MEM"], en:{t:"Fresh session every few turns",sym:"The agent sometimes forgot what was said a message ago.",cause:"When a connector failed to load for a moment, the set of tools changed, the model session was reset and history was not replayed.",fix:"Removed two unused connectors so the set changes less. The lock contention behind it is still being traced.",lesson:"Every connector is something that can fail. Keep only the ones you use."},
+   ru:{t:"Новая сессия каждые пару сообщений",sym:"Агент иногда забывал, что было сообщением раньше.",cause:"Когда коннектор на секунду не грузился, менялся набор инструментов, сессия модели сбрасывалась, а история не подгружалась.",fix:"Убрали два неиспользуемых коннектора, чтобы набор менялся реже. Причину блокировки ещё ищем.",lesson:"Каждый коннектор может сломаться. Оставляй только те, что используешь."}},
+  {s:"fixed", b:["ACT","EVAL"], num:"102", en:{t:"Dialogs nobody could click",sym:"Unreal kept popping up modal windows and the agent froze until timeout.",cause:"Git Bash rewrote /Game/... into C:/Program Files/Git/Game/..., launches had no -unattended, and every new build folder triggered a new firewall prompt. 102 rules piled up.",fix:"Launch only through PowerShell scripts or with path conversion off, always -unattended, one fixed build folder.",lesson:"An agent can't press OK. Every automated launch must be dialog-free."},
+   ru:{t:"Окна, которые некому нажать",sym:"Unreal постоянно показывал модальные окна, и агент висел до таймаута.",cause:"Git Bash превращал /Game/... в C:/Program Files/Git/Game/..., у запусков не было -unattended, а каждая новая папка сборки вызывала новый запрос брандмауэра. Набралось 102 правила.",fix:"Запуск только через PowerShell-скрипты или с отключённой конвертацией путей, всегда -unattended, одна постоянная папка сборки.",lesson:"Агент не нажмёт OK. Любой автозапуск должен идти без диалогов."}},
+  {s:"fixed", b:["MEM"], en:{t:"One memory file, two homes",sym:"The agent's long-term memory quietly stopped loading.",cause:"The memory file was a hard link shared with a notes vault, and the gateway refuses hard-linked memory files.",fix:"Split it into two independent files with identical content, after a backup.",lesson:"One memory file per agent. Sync on purpose, not through the file system."},
+   ru:{t:"Один файл памяти, два дома",sym:"Долгая память агента тихо перестала загружаться.",cause:"Файл памяти был жёсткой ссылкой, общей с заметками, а гейтвей не грузит такие файлы.",fix:"Разделили на два независимых файла с одинаковым содержимым, после бэкапа.",lesson:"Один файл памяти на агента. Синхронизируй осознанно, а не через файловую систему."}},
+  {s:"fixed", b:["GUARD"], en:{t:"Two writers, one project",sym:"The desktop app and the phone agent could edit the same game project at once.",cause:"Nothing stopped two harnesses from writing to the same working tree.",fix:"A writer-lock plugin: one writer per project, checked before every tool call.",lesson:"Decide who owns a project before you give two agents the keys."},
+   ru:{t:"Два писателя, один проект",sym:"Десктоп-приложение и агент с телефона могли править игру одновременно.",cause:"Ничто не мешало двум харнессам писать в одну рабочую папку.",fix:"Плагин writer lock: один писатель на проект, проверка перед каждым вызовом инструмента.",lesson:"Реши, кто владеет проектом, прежде чем давать ключи двум агентам."}},
+  {s:"fixed", b:["CTX"], en:{t:"Windows paper cuts",sym:"Commands from the guide failed with “Cannot find module”.",cause:"~ is not expanded in PowerShell, and a non-Latin user folder broke the C++ toolchain and a CLI login.",fix:"$HOME in every command, a junction to an ASCII path for builds.",lesson:"Test on the real OS, the real shell and the real user path."},
+   ru:{t:"Мелкие порезы Windows",sym:"Команды из гайда падали с «Cannot find module».",cause:"PowerShell не раскрывает ~, а кириллическое имя папки пользователя ломало C++-тулчейн и логин одной CLI.",fix:"$HOME во всех командах, junction на ASCII-путь для сборок.",lesson:"Проверяй на реальной ОС, в реальном шелле и с реальным путём."}}
+];
+
+const BOOSTS = [
+  {c:"rhythm", k:"CHAN", en:["Work from the phone","A task sent from Telegram runs on the home PC and the answer comes back to the same chat."],ru:["Работа с телефона","Задача из Telegram выполняется на домашнем ПК, ответ приходит в тот же чат."]},
+  {c:"brain", k:"ROUTE", en:["Limits don't stop the work","When one provider runs out, the agent keeps going on the other."],ru:["Лимиты не останавливают работу","Когда у одного провайдера кончается лимит, агент продолжает на другом."]},
+  {c:"hands", k:"ACT", en:["The agent owns the game editor","It opens Unreal, edits through MCP, closes it, builds and tests. 21 builds in one day."],ru:["Агент управляет редактором игры","Сам открывает Unreal, правит через MCP, закрывает, собирает, тестирует. 21 сборка за день."]},
+  {c:"control", k:"GUARD", en:["Judgments for fractions of a cent","Jev decides wait, read, send or compact before an expensive model spends tokens on it."],ru:["Решения за доли цента","Jev решает, ждать ли, читать ли, отправлять ли, сжимать ли, до того как дорогая модель тратит токены."]},
+  {c:"know", k:"MEM", en:["One screen of truth","A local dashboard: which model answered, limits, live runs, failing calls."],ru:["Один экран правды","Локальный дашборд: какая модель ответила, лимиты, текущие запуски, ошибки."]},
+  {c:"control", k:"EVAL", en:["Push, don't wait","The agent pushes and reports right away instead of watching CI for twenty minutes."],ru:["Пушни и не жди","Агент пушит и сразу отчитывается, а не смотрит на CI двадцать минут."]}
+];
+
+const LADDER = [
+  {en:["Single decision","one yes or no"],ru:["Одиночное решение","одно да или нет"], our:{en:"Memory gate: does this note contain a credential?",ru:"Гейт памяти: есть ли в заметке секрет?"}, w:{en:"plugin + hook",ru:"плагин + хук"}},
+  {en:["Multiple choice","one of several"],ru:["Выбор из вариантов","одно из нескольких"], our:{en:"Wait gate: quick, long but finite, never exits, or needs input?",ru:"Гейт ожидания: быстро, долго, но конечно, бесконечно или ждёт ввода?"}, w:{en:"Claude Code hook",ru:"хук Claude Code"}},
+  {en:["Composite scoring","Jev plus code"],ru:["Составная оценка","Jev плюс код"], our:{en:"Auto-compaction: context above 50% × “task finished?” × 30-minute cooldown.",ru:"Автокомпакция: контекст выше 50% × «задача закончена?» × пауза 30 минут."}, w:{en:"OpenClaw plugin",ru:"плагин OpenClaw"}},
+  {en:["Confidence gating","act only when sure"],ru:["Порог уверенности","действовать, только если уверен"], our:{en:"Every gate acts only above its threshold. Below it, or on any error, the tool runs as usual.",ru:"Каждый гейт срабатывает только выше своего порога. Ниже, или при любой ошибке, инструмент работает как обычно."}, w:{en:"all gates",ru:"все гейты"}},
+  {en:["Model routing","right model per turn"],ru:["Роутинг моделей","нужная модель на ход"], our:{en:"Easy turn goes to Sonnet, hard turn stays on Opus, same harness. Stands down if the primary changes.",ru:"Простой ход уходит на Sonnet, сложный остаётся на Opus, в том же харнессе. Отключается, если основная модель сменилась."}, w:{en:"OpenClaw plugin",ru:"плагин OpenClaw"}},
+  {en:["Guardrail hooks","before a tool runs"],ru:["Хуки-ограничения","до запуска инструмента"], our:{en:"Destination check before every message: who owns this chat, then does the topic belong here.",ru:"Проверка адресата перед каждым сообщением: чей это чат и подходит ли тема."}, w:{en:"OpenClaw plugin",ru:"плагин OpenClaw"}},
+  {en:["Should I compact","at a natural break"],ru:["Пора ли сжимать","в естественной паузе"], our:{en:"Gateway sessions compact at a natural break. Claude Code gets a /compact hint past 150k tokens.",ru:"Сессии гейтвея сжимаются в естественной паузе. Claude Code получает подсказку /compact после 150k токенов."}, w:{en:"plugin + hook",ru:"плагин + хук"}},
+  {en:["Cheap reads","ask before reading"],ru:["Дешёвое чтение","спросить, прежде чем читать"], our:{en:"ask_jev_file_bool, _choice, _score: an answer about a file without loading it into context.",ru:"ask_jev_file_bool, _choice, _score: ответ про файл без загрузки в контекст."}, w:{en:"MCP tool",ru:"MCP-инструмент"}},
+  {en:["Files at scale","many files in parallel"],ru:["Файлы пачкой","много файлов параллельно"], our:{en:"ask_jev_files over globs, pick_first_file. The test found the one file that calls the API out of all of them.",ru:"ask_jev_files по маскам, pick_first_file. В тесте нашёл единственный файл, который вызывает API."}, w:{en:"MCP tool",ru:"MCP-инструмент"}},
+  {en:["Agentic Jev","the agent writes the questions"],ru:["Агентный Jev","агент сам пишет вопросы"], our:{en:"ask_jev runs a read-only command and answers the agent's own questions about the output. check_process spots a process waiting for input.",ru:"ask_jev запускает команду только на чтение и отвечает на вопросы агента о её выводе. check_process видит процесс, который ждёт ввода."}, w:{en:"MCP tool",ru:"MCP-инструмент"}}
+];
+
+const EXTRAS = [
+  {en:["Wait or don't wait","Our own idea. Blocks “watch CI” style commands and tells the agent to push and report."],ru:["Ждать или не ждать","Наша идея. Блокирует команды вида «смотреть CI» и велит пушить и отчитываться."]},
+  {en:["Outcome check","After a command: clean, partial (skipped tests) or failed."],ru:["Проверка результата","После команды: чисто, частично (пропущены тесты) или упало."]},
+  {en:["Two-layer destination","Code ownership first, so the worst leak never needs a model."],ru:["Двухслойный адресат","Сначала принадлежность в коде, чтобы самая опасная утечка не зависела от модели."]},
+  {en:["Memory hygiene","No secrets and no “still running” statuses in long-term memory."],ru:["Гигиена памяти","Никаких секретов и статусов «ещё идёт» в долгой памяти."]}
+];
+
+const SAFETY = [
+  {en:"Work folders are blocked: nothing from them is sent to Jev",ru:"Рабочие папки заблокированы: из них в Jev ничего не уходит"},
+  {en:"Every hook fails open: an API error never blocks work",ru:"Каждый хук при ошибке пропускает: сбой API не блокирует работу"},
+  {en:"Logs record decisions, never content",ru:"В логах решения, но не содержимое"},
+  {en:"71 tests: 30 offline, 16 live, 8 MCP, 17 plugin",ru:"71 тест: 30 офлайн, 16 живых, 8 MCP, 17 плагина"}
+];
+
+const LESSONS = [
+  {en:"Enforce isolation in code. Prompts are suggestions.",ru:"Изоляцию обеспечивай кодом. Промпт — это пожелание."},
+  {en:"Watch which model actually answered.",ru:"Смотри, какая модель реально ответила."},
+  {en:"Set every model explicitly, helpers included.",ru:"Задавай каждую модель явно, включая служебную."},
+  {en:"Give every daemon a memory alarm.",ru:"Дай каждому демону тревогу по памяти."},
+  {en:"Test long tasks end to end on the real channel.",ru:"Проверяй долгие задачи целиком через реальный канал."},
+  {en:"Agents can't click OK. Remove every dialog.",ru:"Агент не нажмёт OK. Убери все диалоги."},
+  {en:"Back up before every config change.",ru:"Делай бэкап перед каждым изменением конфига."},
+  {en:"Keep work data away from third-party judges.",ru:"Не отправляй рабочие данные сторонним сервисам."}
+];
+
+const FORMULA = `POST /v1/systemone
+{ "state": { "command": "gh run watch" },
+  "questions": { "duration": { "type": "choice",
+    "choices": ["quick","long_finite","never_exits","needs_input"] } } }
+
+→ duration: long_finite   (≈ 0.3 s, fraction of a cent)
+→ hook: blocked. "Push and report instead of waiting."`;
+
+/* ---------- render ---------- */
+const store = {get(k){try{return localStorage.getItem(k)}catch{return null}}, set(k,v){try{localStorage.setItem(k,v)}catch{}}};
+let lang = location.hash === "#ru" ? "ru" : location.hash === "#en" ? "en" : (store.get("ha2-lang") || "en");
+let filter = "all";
+const $ = s => document.querySelector(s);
+
+function render(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = T[el.dataset.t][lang]);
+  $("#lang-en").setAttribute("aria-pressed", lang === "en");
+  $("#lang-ru").setAttribute("aria-pressed", lang === "ru");
+  $("#stats").innerHTML = STATS.map(s => `<div class="stat"><b>${s.n}</b><span>${s[lang]}</span></div>`).join("");
+  $("#stackGrid").innerHTML = STACK.map((l,i) => (i ? `<div class="pipe" aria-hidden="true"><span></span><i></i></div>` : "") +
+    `<div class="layer"><span class="lname">${l[lang]}</span><div class="boxes">${l.boxes.map(b => `<div class="box${b.hl ? " hl" : ""}">${b.c ? `<span class="dot" style="background:var(--w-${b.c})"></span>` : ""}<b>${b[lang][0]}</b><span>${b[lang][1]}</span></div>`).join("")}</div></div>`).join("");
+  $("#filters").innerHTML = ["all","fixed","workaround","open"].map(f => `<button type="button" class="chip" data-f="${f}" aria-pressed="${f === filter}">${T[f][lang]} · ${f === "all" ? INCIDENTS.length : INCIDENTS.filter(x => x.s === f).length}</button>`).join("");
+  $("#incGrid").innerHTML = INCIDENTS.filter(x => filter === "all" || x.s === filter).map(x => { const d = x[lang]; return `<article class="inc">
+    <div class="inc-h"><h3>${d.t}</h3><span class="pill ${x.s}">${T[x.s][lang]}</span></div>
+    <p class="sym">${d.sym}</p>
+    <dl class="rows"><div><dt>${T.cause[lang]}</dt><dd>${d.cause}</dd></div><div><dt>${T.fix[lang]}</dt><dd>${d.fix}</dd></div></dl>
+    <div class="tags">${x.b.map(tag).join("")}${x.num ? `<span class="num">${x.num}</span>` : ""}</div>
+    <p class="lesson">${d.lesson}</p></article>`; }).join("");
+  $("#boostGrid").innerHTML = BOOSTS.map(b => `<div class="boost" style="--wire:var(--w-${b.c});--tint:var(--t-${b.c})"><span class="k">${b.k}</span><b>${b[lang][0]}</b><p>${b[lang][1]}</p></div>`).join("");
+  $("#jevFormula").textContent = FORMULA;
+  $("#ladder").innerHTML = LADDER.map((r,i) => `<div class="rung${i === 9 ? " top" : ""}" style="--i:${i+1}"><span class="n">${i+1}</span><h3>${r[lang][0]}<small>${r[lang][1]}</small></h3><p>${r.our[lang]}</p><span class="where">${r.w[lang]}</span></div>`).reverse().join("");
+  $("#extras").innerHTML = EXTRAS.map(e => `<div class="extra"><b>${e[lang][0]}</b><span>${e[lang][1]}</span></div>`).join("");
+  $("#safety").innerHTML = SAFETY.map(s => `<span>${s[lang]}</span>`).join("");
+  $("#lessonList").innerHTML = LESSONS.map(l => `<li>${l[lang]}</li>`).join("");
+}
+render();
+function setLang(l){ if (l === lang) return; lang = l; store.set("ha2-lang", l); render(); }
+$("#lang-en").addEventListener("click", () => setLang("en"));
+$("#lang-ru").addEventListener("click", () => setLang("ru"));
+$("#filters").addEventListener("click", e => { const c = e.target.closest(".chip"); if (!c) return; filter = c.dataset.f; render(); });
+</script>
+</body>
+</html>
