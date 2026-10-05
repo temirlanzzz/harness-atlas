@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Harness Atlas: the 12 parts of an AI harness, which ones each role needs, and how to build them up one level at a time.">
+<style>:root{color-scheme:light;padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Harness Atlas Visual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap">
+<style>
+/* Layout: one radial "wiring harness" as the hero (model in the centre, 12 parts on a ring, wires light up per role); everything below is tiles, stairs and lanes with as few words as possible. */
+:root{
+  --bg:#F1F2F4; --surface:#FFFFFF; --ink:#101217; --muted:#5A6070; --line:#D8DCE3; --soft:#E7EAEF;
+  --w-know:#2E62F0; --w-hands:#B67600; --w-rhythm:#0D8A62; --w-brain:#6E45F0; --w-control:#CF3B33;
+  --t-know:#E5ECFF; --t-hands:#FBEFD6; --t-rhythm:#DBF3EA; --t-brain:#ECE5FF; --t-control:#FBE3E1;
+  --f-display:"Unbounded","Onest",system-ui,sans-serif;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0C0E11; --surface:#15181E; --ink:#EDEFF3; --muted:#99A0AD; --line:#2A2F38; --soft:#1E222A;
+  --w-know:#7CA2FF; --w-hands:#F0B43C; --w-rhythm:#43CF9C; --w-brain:#A98CFF; --w-control:#FF7B70;
+  --t-know:#18223F; --t-hands:#31260E; --t-rhythm:#0E2C22; --t-brain:#231C40; --t-control:#381917;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0C0E11; --surface:#15181E; --ink:#EDEFF3; --muted:#99A0AD; --line:#2A2F38; --soft:#1E222A;
+  --w-know:#7CA2FF; --w-hands:#F0B43C; --w-rhythm:#43CF9C; --w-brain:#A98CFF; --w-control:#FF7B70;
+  --t-know:#18223F; --t-hands:#31260E; --t-rhythm:#0E2C22; --t-brain:#231C40; --t-control:#381917;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--f-body);padding-inline:20px;padding-block:0 40px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.015em}
+h2{font-size:clamp(26px,3.6vw,40px)}
+p{margin:0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.eyebrow{font:600 12px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:18px}
+.brand{display:flex;align-items:center;gap:10px;font:700 15px/1 var(--f-display)}
+.mark{display:flex;gap:3px}
+.mark i{width:4px;height:18px;border-radius:2px}
+.top nav{display:flex;align-items:center;gap:20px;font-size:14px}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover{color:var(--ink)}
+.lang{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
+.lang button{appearance:none;border:0;background:transparent;color:var(--muted);font:700 12px/1 var(--f-mono);letter-spacing:.06em;padding:7px 11px;border-radius:999px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:32px;align-items:center;padding-block:28px 56px}
+.hero h1{font-size:clamp(34px,5.4vw,66px)}
+.hero h1 .b{display:block;color:var(--muted)}
+.lede{font-size:18px;margin-top:18px;color:var(--muted)}
+.who{margin-top:30px;display:grid;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px/1 var(--f-body);padding:10px 14px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.chip:hover{border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.eq{margin-top:26px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:30px}
+.eq .who-is{font:700 15px/1 var(--f-display);margin-right:4px}
+.eq .op{font:700 14px/1 var(--f-mono);color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;font:700 12px/1 var(--f-mono);letter-spacing:.03em;border:1px solid transparent;white-space:nowrap}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.tag.dim{background:transparent!important;border:1px dashed currentColor;opacity:.7}
+.L-know{color:var(--w-know);background:var(--t-know)}
+.L-hands{color:var(--w-hands);background:var(--t-hands)}
+.L-rhythm{color:var(--w-rhythm);background:var(--t-rhythm)}
+.L-brain{color:var(--w-brain);background:var(--t-brain)}
+.L-control{color:var(--w-control);background:var(--t-control)}
+.info{margin-top:18px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px 16px;display:flex;gap:12px;align-items:baseline;font-size:15px;min-height:54px}
+.info b{font:700 13px/1.4 var(--f-mono);letter-spacing:.03em;white-space:nowrap}
+.info.warn b{color:var(--w-control)}
+
+.rig{position:relative;min-width:0}
+.rig svg{width:100%;height:auto;display:block;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;font-size:13px;color:var(--muted);margin-top:6px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:16px;height:4px;border-radius:2px}
+
+/* svg parts */
+.wire{fill:none;stroke-linecap:round;transition:stroke .3s,stroke-width .3s,opacity .3s}
+.wire.off{stroke:var(--line);stroke-width:1.5}
+.wire.core{stroke-width:4;stroke-dasharray:1;stroke-dashoffset:0;animation:draw .7s ease-out both}
+.wire.extra{stroke-width:2;stroke-dasharray:.02 .025;opacity:.9}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.node{cursor:pointer;outline:none}
+.node circle{transition:fill .3s,stroke .3s,stroke-width .3s;fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.node .c{font:700 17px var(--f-mono);fill:var(--muted);transition:fill .3s}
+.node .n{font:500 11.5px var(--f-body);fill:var(--muted)}
+.node.core circle{stroke-width:3}
+.node.extra circle{stroke-width:2;stroke-dasharray:5 4}
+.node.off{opacity:.55}
+.node:hover circle,.node:focus-visible circle{stroke-width:3.5}
+.node.picked circle{stroke-width:4}
+.core-ring{fill:none;stroke:var(--line);stroke-dasharray:3 6}
+.core-dot{fill:var(--ink)}
+.core-t{font:700 15px var(--f-display);fill:var(--bg);letter-spacing:.06em}
+.sheath{fill:none;stroke-width:4;stroke-linecap:round}
+
+section{padding-block:64px;border-top:1px solid var(--line)}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px 24px;margin-bottom:28px}
+
+/* pains */
+.pains{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.pain{appearance:none;font:inherit;color:inherit;text-align:left;cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:18px;display:grid;min-height:170px;perspective:800px}
+.pain:hover{border-color:var(--ink)}
+.face{grid-area:1/1;display:grid;gap:12px;align-content:space-between;transition:opacity .25s,transform .35s;backface-visibility:hidden}
+.face .q{font:600 18px/1.25 var(--f-body);letter-spacing:-.01em}
+.face .q::before{content:"“";font-family:var(--f-display);color:var(--muted);margin-right:2px}
+.face .q::after{content:"”";font-family:var(--f-display);color:var(--muted)}
+.face .fix{font-size:15.5px;line-height:1.4}
+.face .tags{display:flex;flex-wrap:wrap;gap:5px}
+.back{opacity:0;transform:rotateX(-90deg)}
+.pain.flip .front{opacity:0;transform:rotateX(90deg)}
+.pain.flip .back{opacity:1;transform:none}
+.pain.flip{background:var(--soft)}
+.flipmark{font:700 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* stairs */
+.stairs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:end}
+.stair{display:grid;gap:10px;align-content:end}
+.stair h3{font-size:17px}
+.stair p{font-size:14px;color:var(--muted);min-height:2.6em}
+.bar{height:var(--h);border-radius:6px 6px 2px 2px;background:color-mix(in srgb,var(--ink) var(--a),var(--soft));display:flex;align-items:flex-end;padding:12px 14px;transition:height .5s}
+.bar span{font:700 34px/1 var(--f-display);color:var(--bg)}
+.stair:first-child .bar span{color:var(--muted)}
+.stair .tags{display:flex;flex-wrap:wrap;gap:5px;min-height:26px}
+
+/* case */
+.lanes{display:grid;gap:12px}
+.lane{display:grid;grid-template-columns:190px minmax(0,1fr);gap:16px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:16px 18px}
+.lane h3{font-size:16px}
+.track{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.st{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:6px;font:500 14px/1.2 var(--f-body);background:var(--tint);color:var(--ink);border:1px solid color-mix(in srgb,var(--wire) 40%,transparent)}
+.st b{font:700 11px/1 var(--f-mono);color:var(--wire);letter-spacing:.04em}
+.arrow{color:var(--muted);font:700 14px/1 var(--f-mono)}
+details{margin-top:12px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r)}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;font:700 15px/1.2 var(--f-display)}
+summary::-webkit-details-marker{display:none}
+summary .plus{font:700 18px/1 var(--f-mono);color:var(--muted);transition:transform .2s}
+details[open] summary .plus{transform:rotate(45deg)}
+.dbody{padding:0 18px 18px;display:grid;gap:12px}
+pre{margin:0;background:var(--soft);border-radius:6px;padding:16px;overflow:auto;font:600 12.5px/1.65 var(--f-mono);white-space:pre-wrap;word-break:break-word}
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font:600 13px/1 var(--f-body);padding:9px 14px;border-radius:6px;cursor:pointer;justify-self:start}
+
+footer{border-top:1px solid var(--line);padding-block:24px 0;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted)}
+footer a{color:inherit}
+
+@media (max-width:960px){
+  .hero{grid-template-columns:1fr;gap:12px;padding-block:16px 40px}
+  .rig{order:-1;max-width:560px;margin:0 auto;width:100%}
+  .pains{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lane{grid-template-columns:1fr;gap:10px}
+}
+@media (max-width:640px){
+  body{padding-inline:16px}
+  .top nav a{display:none}
+  .node .n{display:none}
+  .node .c{font-size:22px}
+  .pains{grid-template-columns:1fr}
+  .pain{min-height:130px}
+  .stairs{grid-template-columns:1fr;gap:8px}
+  .stair{grid-template-columns:64px minmax(0,1fr);grid-template-areas:"bar h" "bar p" "bar t";column-gap:14px;row-gap:4px;align-items:center}
+  .stair .bar{grid-area:bar;height:auto;min-height:72px;justify-content:center;align-items:center}
+  .stair h3{grid-area:h}.stair p{grid-area:p;min-height:0}.stair .tags{grid-area:t;min-height:0}
+  .arrow{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="mark" aria-hidden="true"><i style="background:var(--w-know)"></i><i style="background:var(--w-hands)"></i><i style="background:var(--w-rhythm)"></i><i style="background:var(--w-brain)"></i><i style="background:var(--w-control)"></i></span>Harness Atlas</div>
+    <nav>
+      <a href="#pains" data-t="navPains"></a>
+      <a href="#levels" data-t="navLevels"></a>
+      <a href="#case" data-t="navCase"></a>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" id="lang-en" aria-pressed="true">EN</button>
+        <button type="button" id="lang-ru" aria-pressed="false">RU</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="hero" id="builder">
+    <div>
+      <h1><span data-t="h1a"></span> <span class="b" data-t="h1b"></span></h1>
+      <p class="lede" data-t="lede"></p>
+      <div class="who">
+        <span class="eyebrow" data-t="iam"></span>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="eq" id="eq" aria-live="polite"></div>
+      <div class="info" id="info" aria-live="polite"></div>
+    </div>
+    <div class="rig">
+      <svg id="rig" viewBox="-308 -308 616 616" role="img" aria-labelledby="rigTitle"><title id="rigTitle">Harness diagram</title></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+
+  <section id="pains">
+    <div class="head"><h2 data-t="painsT"></h2><span class="eyebrow" data-t="painsS"></span></div>
+    <div class="pains" id="painGrid"></div>
+  </section>
+
+  <section id="levels">
+    <div class="head"><h2 data-t="lvT"></h2></div>
+    <div class="stairs" id="stairs"></div>
+  </section>
+
+  <section id="case">
+    <div class="head"><div><p class="eyebrow" data-t="caseEy"></p><h2 style="margin-top:12px" id="caseTitle"></h2></div></div>
+    <div class="chips" id="caseChips" style="margin-bottom:20px"></div>
+    <div class="lanes" id="lanes"></div>
+    <details id="prof">
+      <summary><span data-t="profileT"></span><span class="plus" aria-hidden="true">+</span></summary>
+      <div class="dbody">
+        <pre id="profile"></pre>
+        <button class="btn" id="copyBtn" type="button" data-t="copy"></button>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    <span data-t="foot"></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- DATA (edit here) ---------- */
+const LAYERS = {know:{en:"Knowledge",ru:"Знание"}, hands:{en:"Hands",ru:"Руки"}, rhythm:{en:"Rhythm",ru:"Ритм"}, brain:{en:"Brain",ru:"Мозг"}, control:{en:"Control",ru:"Контроль"}};
+
+const BLOCKS = [
+  {id:"CTX",  layer:"know",   en:["Instructions","Rules it reads every session"],        ru:["Инструкции","Правила, которые он читает каждый раз"]},
+  {id:"MEM",  layer:"know",   en:["Memory","Survives closing the chat"],                  ru:["Память","Переживает закрытие чата"]},
+  {id:"KB",   layer:"know",   en:["Knowledge","Your documents, with citations"],          ru:["База знаний","Твои документы, со ссылками"]},
+  {id:"TOOL", layer:"hands",  en:["Connectors","Mail, calendar, sheets, GitHub"],         ru:["Коннекторы","Почта, календарь, таблицы, GitHub"]},
+  {id:"ACT",  layer:"hands",  en:["Actions","Browser, terminal, desktop"],                ru:["Действия","Браузер, терминал, рабочий стол"]},
+  {id:"SKILL",layer:"hands",  en:["Skills","A procedure done the same way every time"],   ru:["Навыки","Процедура, каждый раз одинаково"]},
+  {id:"AUTO", layer:"rhythm", en:["Schedule","Runs while you are away"],                  ru:["Расписание","Работает, пока тебя нет"]},
+  {id:"CHAN", layer:"rhythm", en:["Channels","Chat, IDE, Telegram, phone"],               ru:["Каналы","Чат, IDE, Telegram, телефон"]},
+  {id:"ROUTE",layer:"brain",  en:["Routing","Right model per task, backup on limits"],    ru:["Роутинг","Нужная модель на задачу, запасная при лимитах"]},
+  {id:"MULTI",layer:"brain",  en:["Sub-agents","Parallel workers and reviewers"],         ru:["Субагенты","Параллельные исполнители и ревьюеры"]},
+  {id:"GUARD",layer:"control",en:["Guardrails","Permissions, isolation, logs, costs"],    ru:["Ограничения","Права, изоляция, журнал, расходы"]},
+  {id:"EVAL", layer:"control",en:["Verification","Proof that it is actually done"],       ru:["Проверка","Доказательство, что готово"]}
+];
+
+const ROLES = [
+  {id:"dev",     en:"developer",     ru:"разработчик",    core:["CTX","ACT","SKILL","GUARD","EVAL"], extra:["MEM","MULTI","ROUTE","AUTO"], pit:{en:"“Done” without running the tests.",ru:"«Готово» без запуска тестов."}},
+  {id:"game",    en:"game dev",      ru:"геймдев",        core:["CTX","ACT","KB","GUARD","EVAL"],    extra:["AUTO","MULTI","ROUTE"],       pit:{en:"An engine dialog freezes the agent until timeout.",ru:"Диалог движка вешает агента до таймаута."}},
+  {id:"design",  en:"designer",      ru:"дизайнер",       core:["KB","TOOL","SKILL","EVAL"],         extra:["ACT","MEM","AUTO"],           pit:{en:"No brand guide in context, generic output.",ru:"Без гайда в контексте получается «средний интернет»."}},
+  {id:"data",    en:"data scientist",ru:"дата-сайентист", core:["TOOL","ACT","KB","GUARD","EVAL"],   extra:["SKILL","AUTO","MULTI"],       pit:{en:"Numbers come from the model, not from code.",ru:"Цифры «в уме», а не из кода."}},
+  {id:"hr",      en:"recruiter",     ru:"рекрутер",       core:["CTX","TOOL","SKILL","GUARD","EVAL"],extra:["MEM","AUTO","CHAN"],          pit:{en:"Personal data and bias. A human decides.",ru:"Персональные данные и предвзятость. Решает человек."}},
+  {id:"mkt",     en:"marketer",      ru:"маркетолог",     core:["KB","SKILL","TOOL","EVAL","GUARD"], extra:["AUTO","ACT","MULTI"],         pit:{en:"Auto-publishing without a review.",ru:"Автопубликация без проверки."}},
+  {id:"founder", en:"founder",       ru:"основатель",     core:["CHAN","MEM","TOOL","GUARD","ROUTE"],extra:["AUTO","MULTI","SKILL","CTX"], pit:{en:"Projects leak into each other's chats.",ru:"Проекты пишут в чужие чаты."}},
+  {id:"econ",    en:"economist",     ru:"экономист",      core:["CTX","KB","MEM","SKILL","TOOL","EVAL"], extra:["AUTO","ACT","GUARD"],     pit:{en:"Invented experience on the CV.",ru:"Выдуманный опыт в CV."}},
+  {id:"student", en:"student",       ru:"студент",        core:["KB","MEM","SKILL","EVAL"],          extra:["AUTO","CTX"],                 pit:{en:"Reading summaries instead of being quizzed.",ru:"Читать пересказы вместо того, чтобы проверять себя."}}
+];
+
+const PAINS = [
+  {b:["CTX","MEM"],         en:["I re-explain everything every time","Stable facts go to instructions. Changing ones go to memory."], ru:["Каждый раз объясняю заново","Постоянное в инструкции, меняющееся в память."]},
+  {b:["KB"],                en:["Too many documents for one chat","A searchable knowledge base. No citation means it is a guess."], ru:["Документов больше, чем влезает в чат","База знаний с поиском. Без цитаты это догадка."]},
+  {b:["ROUTE","MEM"],       en:["I keep hitting model limits","Light model for easy turns, a backup provider, state kept in files."], ru:["Упираюсь в лимиты","Лёгкая модель на простое, запасной провайдер, состояние в файлах."]},
+  {b:["SKILL","AUTO"],      en:["Same task every week","Write it down as a skill once. Then put it on a schedule."], ru:["Каждую неделю одно и то же","Запиши навык один раз. Потом поставь на расписание."]},
+  {b:["AUTO","CHAN","GUARD"],en:["It should work without me","A schedule, a channel for reports, rules for what needs your yes."], ru:["Пусть работает без меня","Расписание, канал для отчётов, правила, что требует твоего «да»."]},
+  {b:["GUARD","CTX","CHAN"],en:["My projects get mixed up","One agent, folder and channel per project, enforced in code."], ru:["Проекты смешиваются","Свой агент, папка и канал на проект. Запрет в коде, а не в промпте."]},
+  {b:["EVAL"],              en:["It says done. It isn't.","A check that can fail: a test, a build, a screenshot, a source."], ru:["Говорит «готово». Не готово.","Проверка, которая может упасть: тест, сборка, скриншот, источник."]},
+  {b:["ACT","GUARD"],       en:["It has to work on websites","The agent searches and drafts. You submit and pay."], ru:["Нужно действовать на сайтах","Агент ищет и готовит черновик. Отправляешь и платишь ты."]},
+  {b:["MULTI","MEM"],       en:["The task is too big","Split it across sub-agents. Keep the shared plan in a file."], ru:["Задача слишком большая","Раздай субагентам. Общий план держи в файле."]},
+  {b:["GUARD"],             en:["No idea what it did or what it cost","An action log and a cost dashboard."], ru:["Не понимаю, что он делал и сколько стоило","Журнал действий и дашборд расходов."]},
+  {b:["TOOL"],              en:["I copy-paste from mail and sheets","Connect the app instead. Start read-only."], ru:["Копирую из почты и таблиц руками","Подключи сервис. Начни с доступа только на чтение."]},
+  {b:["CHAN"],              en:["I want to reach it from my phone","A mobile app or a messenger bot. Test it on a 10-minute task."], ru:["Хочу писать с телефона","Приложение или бот в мессенджере. Проверь на задаче минут на десять."]}
+];
+
+const LEVELS = [
+  {b:[],                                   h:34,  a:"0%",  en:["Chat","You ask."],                         ru:["Чат","Ты спрашиваешь."]},
+  {b:["CTX","KB"],                         h:70,  a:"35%", en:["Project","It knows your context."],         ru:["Проект","Знает твой контекст."]},
+  {b:["MEM","TOOL"],                       h:106, a:"55%", en:["Connected","Remembers. Reaches your apps."],ru:["Подключённый","Помнит и видит твои сервисы."]},
+  {b:["SKILL","AUTO","EVAL"],              h:142, a:"75%", en:["Routines","Repeats and checks itself."],    ru:["Процедуры","Повторяет и проверяет себя."]},
+  {b:["CHAN","ROUTE","MULTI","GUARD","ACT"],h:178, a:"100%",en:["Autonomous","Works while you sleep."],      ru:["Автономный","Работает, пока ты спишь."]}
+];
+
+/* One case per role: title, three lanes of [block, EN, RU] steps, and a starter file. */
+const CASES = {
+  dev:{title:{en:"one repo, three loops",ru:"один репозиторий, три цикла"}, lanes:[
+    {en:"Feature",ru:"Фича",steps:[["CTX","AGENTS.md: build, test, don'ts","AGENTS.md: сборка, тесты, запреты"],["SKILL","Plan → code → test","План → код → тест"],["EVAL","Tests and lint must pass","Тесты и линтер обязательны"],["GUARD","No push without green","Без зелёного нет пуша"]]},
+    {en:"Review",ru:"Ревью",steps:[["TOOL","PR from GitHub","PR из GitHub"],["MULTI","Reviewer sub-agent","Субагент-ревьюер"],["EVAL","Findings with file:line","Замечания с file:line"],["CHAN","Summary to chat","Итог в чат"]]},
+    {en:"Operations",ru:"Эксплуатация",steps:[["AUTO","Nightly checks","Ночные проверки"],["ACT","Reads the logs","Читает логи"],["MEM","Incident notes","Заметки об инцидентах"],["ROUTE","Cheap model for triage","Дешёвая модель на разбор"]]}],
+   starter:{en:`# Project
+Stack: …  Build: \`…\`  Test: \`…\`
+
+# Rules
+- Run the tests before saying "done".
+- Never touch: … (migrations, secrets, prod config).
+- Small commits, one change each.
+- Ask before deleting files or rewriting history.`,
+   ru:`# Проект
+Стек: …  Сборка: \`…\`  Тесты: \`…\`
+
+# Правила
+- Запускай тесты, прежде чем писать «готово».
+- Не трогай: … (миграции, секреты, прод-конфиг).
+- Маленькие коммиты, по одному изменению.
+- Спрашивай перед удалением файлов и переписыванием истории.`}},
+
+  game:{title:{en:"editor open or closed, never both",ru:"редактор открыт или закрыт, не одновременно"}, lanes:[
+    {en:"Scenes",ru:"Сцены",steps:[["CTX","Engine version and modes","Версия движка и режимы"],["ACT","Editor via MCP","Редактор через MCP"],["KB","Docs for this exact version","Документация этой версии"],["EVAL","Screenshot as proof","Скриншот как доказательство"]]},
+    {en:"Build",ru:"Сборка",steps:[["GUARD","Close the editor first","Сначала закрыть редактор"],["ACT","Scripts with -unattended","Скрипты с -unattended"],["GUARD","One fixed build folder","Одна постоянная папка сборки"],["EVAL","Automated tests","Автотесты"]]},
+    {en:"Overnight",ru:"Ночью",steps:[["AUTO","Nightly build and tests","Ночная сборка и тесты"],["GUARD","One writer per project","Один писатель на проект"],["CHAN","Report to Telegram","Отчёт в Telegram"],["ROUTE","Backup model on limits","Запасная модель при лимитах"]]}],
+   starter:{en:`# Project
+Engine: … (exact version)  Project file: …
+
+# Modes
+- Editor open: edit through MCP. Editor closed: run Scripts/*.ps1.
+- Never run scripts while the editor is open.
+
+# Rules
+- Every automated launch uses -unattended. No dialogs.
+- Builds go to Builds/Latest. Proof = screenshot + log.`,
+   ru:`# Проект
+Движок: … (точная версия)  Файл проекта: …
+
+# Режимы
+- Редактор открыт: правки через MCP. Закрыт: запуск Scripts/*.ps1.
+- Никогда не запускай скрипты при открытом редакторе.
+
+# Правила
+- Любой автоматический запуск с -unattended. Без диалогов.
+- Сборки в Builds/Latest. Доказательство = скриншот + лог.`}},
+
+  design:{title:{en:"one brand, every format",ru:"один бренд, все форматы"}, lanes:[
+    {en:"Concepts",ru:"Концепты",steps:[["KB","Brand guide and design system","Гайд и дизайн-система"],["SKILL","3 options by the guide","3 варианта по гайду"],["EVAL","Contrast and spacing check","Проверка контраста и отступов"],["MEM","Chosen direction","Выбранное направление"]]},
+    {en:"Production",ru:"Продакшн",steps:[["TOOL","Figma","Figma"],["SKILL","Image generation","Генерация изображений"],["ACT","Batch export","Пакетный экспорт"],["EVAL","Matches the guide","Соответствие гайду"]]},
+    {en:"Adaptations",ru:"Адаптации",steps:[["AUTO","Resize on every new asset","Ресайз на каждый новый ассет"],["SKILL","Post, story, banner","Пост, сторис, баннер"],["GUARD","Review before handoff","Ревью перед сдачей"]]}],
+   starter:{en:`# Brand
+Colors: …  Fonts: …  Tone: …
+
+# Rules
+- Follow the brand guide. Flag anything that breaks it.
+- Always give 3 distinct options, one line of rationale each.
+- Check contrast before showing a result.`,
+   ru:`# Бренд
+Цвета: …  Шрифты: …  Тон: …
+
+# Правила
+- Следуй гайду. Отмечай всё, что его нарушает.
+- Всегда 3 разных варианта, по строке обоснования.
+- Проверяй контраст, прежде чем показывать результат.`}},
+
+  data:{title:{en:"one dataset, three outputs",ru:"одни данные, три результата"}, lanes:[
+    {en:"Explore",ru:"Анализ",steps:[["KB","Data dictionary","Словарь данных"],["TOOL","Read-only database","База только на чтение"],["ACT","Python in the terminal","Python в терминале"],["EVAL","Every number from code","Каждая цифра из кода"]]},
+    {en:"Model",ru:"Модель",steps:[["SKILL","Experiment template","Шаблон эксперимента"],["MULTI","Variants in parallel","Варианты параллельно"],["EVAL","Holdout and baseline","Holdout и бейзлайн"],["MEM","Experiment log","Журнал экспериментов"]]},
+    {en:"Report",ru:"Отчёт",steps:[["AUTO","Weekly run","Еженедельный запуск"],["SKILL","Report template","Шаблон отчёта"],["GUARD","No personal data in output","Без персональных данных"],["CHAN","Alert on anomalies","Алерт при аномалиях"]]}],
+   starter:{en:`# Data
+Sources: …  Metric definitions: …
+
+# Rules
+- Read-only access. Never write to production tables.
+- Every number in a report comes from executed code.
+- State assumptions and sample size next to each result.`,
+   ru:`# Данные
+Источники: …  Определения метрик: …
+
+# Правила
+- Доступ только на чтение. Никогда не пиши в прод-таблицы.
+- Каждая цифра в отчёте получена выполненным кодом.
+- Рядом с результатом: допущения и размер выборки.`}},
+
+  hr:{title:{en:"one role, one funnel",ru:"одна вакансия, одна воронка"}, lanes:[
+    {en:"Job post",ru:"Вакансия",steps:[["CTX","Role profile and criteria","Профиль роли и критерии"],["SKILL","Job description template","Шаблон вакансии"],["EVAL","Biased wording check","Проверка на предвзятые формулировки"]]},
+    {en:"Screening",ru:"Скрининг",steps:[["TOOL","ATS and mail","ATS и почта"],["SKILL","Score vs criteria, with reasons","Оценка по критериям с причинами"],["GUARD","A human makes the call","Решает человек"],["MEM","Notes per candidate","Заметки по кандидату"]]},
+    {en:"Interviews",ru:"Интервью",steps:[["TOOL","Calendar","Календарь"],["SKILL","Questions per role","Вопросы под роль"],["AUTO","Morning candidate digest","Утренний дайджест кандидатов"],["CHAN","Reminders to the team","Напоминания команде"]]}],
+   starter:{en:`# Company
+Team: …  Values: …  Tone of voice: …
+
+# Rules
+- Score candidates only against the written criteria, with reasons.
+- Never send rejections or offers without my approval.
+- Keep personal data inside the ATS.`,
+   ru:`# Компания
+Команда: …  Ценности: …  Тон: …
+
+# Правила
+- Оценивай кандидатов только по записанным критериям, с причинами.
+- Не отправляй отказы и офферы без моего одобрения.
+- Персональные данные храни только в ATS.`}},
+
+  mkt:{title:{en:"one voice, every channel",ru:"один голос, все каналы"}, lanes:[
+    {en:"Content",ru:"Контент",steps:[["KB","Brand voice and audience","Голос бренда и аудитория"],["SKILL","Post, email, landing","Пост, рассылка, лендинг"],["EVAL","Fact and link check","Проверка фактов и ссылок"],["GUARD","Publish after approval","Публикация после одобрения"]]},
+    {en:"Campaigns",ru:"Кампании",steps:[["TOOL","Analytics","Аналитика"],["MULTI","A/B variants","Варианты A/B"],["EVAL","Compare to last month","Сравнение с прошлым месяцем"],["MEM","What worked","Что сработало"]]},
+    {en:"Planning",ru:"План",steps:[["AUTO","Weekly content plan","Недельный контент-план"],["ACT","Trend research","Поиск трендов"],["CHAN","Drafts to chat","Черновики в чат"]]}],
+   starter:{en:`# Brand
+Audience: …  Voice: …  Never say: …
+
+# Rules
+- Every claim needs a source link.
+- Nothing is published without my explicit OK.
+- Two variants for every headline.`,
+   ru:`# Бренд
+Аудитория: …  Голос: …  Никогда не говорим: …
+
+# Правила
+- У каждого утверждения есть ссылка на источник.
+- Ничего не публикуется без моего явного «да».
+- Два варианта на каждый заголовок.`}},
+
+  founder:{title:{en:"many projects, zero leaks",ru:"много проектов, ноль утечек"}, lanes:[
+    {en:"Morning",ru:"Утро",steps:[["AUTO","Morning brief","Утренний бриф"],["TOOL","Mail and calendar","Почта и календарь"],["MEM","Open decisions","Открытые решения"],["CHAN","To Telegram","В Telegram"]]},
+    {en:"Projects",ru:"Проекты",steps:[["CTX","Instructions per project","Инструкции на проект"],["GUARD","Own agent and bot each","Свой агент и бот"],["GUARD","Sends only to its own chat","Пишет только в свой чат"],["MULTI","Delegate to agents","Делегирование агентам"]]},
+    {en:"Limits and costs",ru:"Лимиты и расходы",steps:[["ROUTE","Backup provider","Запасной провайдер"],["ROUTE","Light model for easy turns","Лёгкая модель на простое"],["GUARD","Cost dashboard","Дашборд расходов"]]}],
+   starter:{en:`# Projects
+A: … (chat …)   B: … (chat …)
+
+# Rules
+- Each project has its own agent, folder and chat. Never cross-post.
+- Morning brief: 5 bullets max, decisions first.
+- Ask before sending anything outside my own chats.`,
+   ru:`# Проекты
+A: … (чат …)   B: … (чат …)
+
+# Правила
+- У каждого проекта свой агент, папка и чат. Никаких пересылок.
+- Утренний бриф: максимум 5 пунктов, решения первыми.
+- Спрашивай, прежде чем отправить что-то вне моих чатов.`}},
+
+  econ:{title:{en:"one profile, three engines",ru:"один профиль, три двигателя"}, lanes:[
+    {en:"Job search",ru:"Поиск работы",steps:[["CTX","Master CV","Мастер-CV"],["ACT","JOE · EconJobMarket · LinkedIn","JOE · EconJobMarket · LinkedIn"],["EVAL","Fit score 0–10","Оценка 0–10"],["SKILL","Tailored CV and letter","CV и письмо под вакансию"],["GUARD","She hits send","Отправляет она"]]},
+    {en:"PhD",ru:"Докторантура",steps:[["MEM","Programs and deadlines","Программы и дедлайны"],["KB","Supervisors' papers","Статьи научруков"],["SKILL","Personal email draft","Черновик письма"],["EVAL","Proposal vs tough reviewer","Proposal против строгого рецензента"],["AUTO","Reminders 30 · 14 · 3 days","Напоминания за 30 · 14 · 3 дня"]]},
+    {en:"Study",ru:"Учёба",steps:[["KB","Papers with page cites","Статьи со ссылкой на страницу"],["MEM","What is still unclear","Что ещё непонятно"],["SKILL","Intuition → formula → Stata","Интуиция → формула → Stata"],["EVAL","Math checked by code","Расчёты проверяет код"],["AUTO","Spaced review","Интервальные повторения"]]}],
+   starter:{en:`# Who I am
+Economist. Education: … Experience: … years in …
+Methods: econometrics (panel data, IV, DiD), Stata / R / Python.
+
+# What I'm looking for
+Jobs: roles …, countries …, format …, salary from …
+PhD: fields …, countries …, start …, funding needed: yes / no
+
+# Rules for the assistant
+- Never invent experience. Use only facts from my master CV.
+- For every posting: fit score 0–10, what matches, what is missing.
+- I send applications and emails myself. You prepare drafts.
+- Log every deadline in the tracker: date, link, what to prepare.
+- Explain as: intuition, then formula, then a Stata or R example.`,
+   ru:`# Кто я
+Экономист. Образование: … Опыт: … лет, сферы: …
+Методы: эконометрика (панельные данные, IV, DiD), Stata / R / Python.
+
+# Что ищу
+Работа: роли …, страны …, формат …, зарплата от …
+Докторантура: направления …, страны …, старт …, нужен фандинг: да / нет
+
+# Правила для ассистента
+- Не выдумывай опыт. Используй только факты из мастер-CV.
+- На каждую вакансию: оценка 0–10, что совпадает, чего не хватает.
+- Отклики и письма отправляю я сама. Ты готовишь черновики.
+- Все дедлайны записывай в трекер: дата, ссылка, что подготовить.
+- Объясняй так: интуиция, потом формула, потом пример в Stata или R.`}},
+
+  student:{title:{en:"one exam, steady practice",ru:"один экзамен, регулярная практика"}, lanes:[
+    {en:"Learn",ru:"Изучение",steps:[["KB","Textbook and notes","Учебник и конспекты"],["SKILL","Explain three ways","Объяснить тремя способами"],["MEM","Weak spots","Слабые места"]]},
+    {en:"Practice",ru:"Практика",steps:[["SKILL","Problems by topic","Задачи по темам"],["EVAL","Checked answers","Проверенные ответы"],["MEM","Mistake log","Журнал ошибок"]]},
+    {en:"Review",ru:"Повторение",steps:[["AUTO","Spaced repetition","Интервальные повторения"],["SKILL","Flashcards","Карточки"],["EVAL","Mock exam","Пробный экзамен"]]}],
+   starter:{en:`# Goal
+Exam or course: …  Date: …  Level now: …
+
+# Rules
+- Quiz me before explaining. One question at a time.
+- Explain: intuition, then formal, then an example.
+- Track my mistakes and bring them back next week.`,
+   ru:`# Цель
+Экзамен или курс: …  Дата: …  Текущий уровень: …
+
+# Правила
+- Сначала спрашивай меня, потом объясняй. По одному вопросу.
+- Объясняй: интуиция, потом формально, потом пример.
+- Записывай мои ошибки и возвращай их через неделю.`}}
+};
+
+const T = {
+  navPains:{en:"Pains",ru:"Боли"}, navLevels:{en:"Levels",ru:"Уровни"}, navCase:{en:"Cases",ru:"Кейсы"},
+  h1a:{en:"The model is the engine.",ru:"Модель — двигатель."}, h1b:{en:"The harness is everything else.",ru:"Харнесс — всё остальное."},
+  lede:{en:"12 parts. Pick who you are and see what to wire.",ru:"12 деталей. Выбери, кто ты, и посмотри, что подключить."},
+  iam:{en:"I'm a",ru:"Я —"}, need:{en:"needed",ru:"нужно"}, later:{en:"later",ru:"позже"},
+  watch:{en:"Watch out",ru:"Осторожно"}, model:{en:"MODEL",ru:"МОДЕЛЬ"},
+  painsT:{en:"Start from the pain",ru:"Начни с боли"}, painsS:{en:"Tap a card for the fix",ru:"Нажми на карточку"},
+  fix:{en:"Fix",ru:"Решение"}, back:{en:"Back",ru:"Назад"},
+  lvT:{en:"Build one level at a time",ru:"Собирай по одному уровню"},
+  caseEy:{en:"Case",ru:"Разбор"},
+  profileT:{en:"Starter file for the project",ru:"Стартовый файл для проекта"},
+  copy:{en:"Copy",ru:"Скопировать"}, copied:{en:"Copied",ru:"Скопировано"}, selected:{en:"Selected. Press Ctrl+C",ru:"Выделено. Нажми Ctrl+C"},
+  foot:{en:"Harness Atlas · visual edition · October 2026",ru:"Harness Atlas · визуальная версия · октябрь 2026"},
+  v1:{en:"Detailed version ↗",ru:"Подробная версия ↗"}
+};
+
+/* ---------- STATE ---------- */
+const store = {get(k){try{return localStorage.getItem(k)}catch{return null}}, set(k,v){try{localStorage.setItem(k,v)}catch{}}};
+let lang = location.hash === "#ru" ? "ru" : location.hash === "#en" ? "en" : (store.get("ha2-lang") || "en");
+let role = store.get("ha2-role") || "dev";
+if (!ROLES.some(r => r.id === role)) role = "dev";
+let picked = null;
+const flipped = new Set();
+
+const $ = s => document.querySelector(s);
+const t = k => T[k][lang];
+const byId = Object.fromEntries(BLOCKS.map(b => [b.id, b]));
+const tag = (id, dim) => `<span class="tag L-${byId[id].layer}${dim ? " dim" : ""}">${id}</span>`;
+const R = () => ROLES.find(r => r.id === role);
+
+/* ---------- RIG GEOMETRY ---------- */
+const NS = "http://www.w3.org/2000/svg";
+const RING = 240, NODE = 42, CORE = 70;
+const order = Object.keys(LAYERS).flatMap(l => BLOCKS.filter(b => b.layer === l));
+const GAP = 0.7, units = order.length + Object.keys(LAYERS).length * GAP, step = 360 / units;
+const pos = {}, arcs = {};
+let cur = -90 - step / 2;
+for (const l of Object.keys(LAYERS)) {
+  cur += GAP * step / 2;
+  const start = cur;
+  for (const b of order.filter(x => x.layer === l)) { cur += step / 2; pos[b.id] = cur; cur += step / 2; }
+  arcs[l] = [start + 4, cur - 4];
+  cur += GAP * step / 2;
+}
+const P = (deg, r) => { const a = deg * Math.PI / 180; return [r * Math.cos(a), r * Math.sin(a)]; };
+const arcPath = (a0, a1, r) => { const [x0,y0] = P(a0,r), [x1,y1] = P(a1,r); return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
+
+function buildRig(){
+  const svg = $("#rig");
+  let h = "";
+  for (const [l,[a0,a1]] of Object.entries(arcs)) h += `<path class="sheath" d="${arcPath(a0,a1,RING + NODE + 14)}" style="stroke:var(--w-${l})"/>`;
+  for (const b of order) {
+    const a = pos[b.id];
+    const [sx,sy] = P(a, CORE + 4), [cx,cy] = P(a + 16, 150), [ex,ey] = P(a, RING - NODE - 3);
+    h += `<path class="wire off" id="w-${b.id}" pathLength="1" d="M${sx.toFixed(1)} ${sy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}"/>`;
+  }
+  h += `<circle class="core-ring" r="${CORE + 18}"/><circle class="core-dot" r="${CORE}"/><text class="core-t" id="coreT" text-anchor="middle" dominant-baseline="central"></text>`;
+  for (const b of order) {
+    const [x,y] = P(pos[b.id], RING);
+    h += `<g class="node off" id="n-${b.id}" data-b="${b.id}" tabindex="0" role="button" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" style="--wire:var(--w-${b.layer});--tint:var(--t-${b.layer})">
+      <circle r="${NODE}"/><text class="c" text-anchor="middle" y="-2">${b.id}</text><text class="n" text-anchor="middle" y="17"></text></g>`;
+  }
+  svg.insertAdjacentHTML("beforeend", h);
+  svg.addEventListener("click", e => { const g = e.target.closest(".node"); if (g) pick(g.dataset.b); });
+  svg.addEventListener("keydown", e => { const g = e.target.closest(".node"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pick(g.dataset.b); } });
+}
+function pick(id){ picked = picked === id ? null : id; paintRig(false); renderInfo(); }
+
+function paintRig(animate){
+  const r = R();
+  for (const b of order) {
+    const st = r.core.includes(b.id) ? "core" : r.extra.includes(b.id) ? "extra" : "off";
+    const w = document.getElementById("w-" + b.id), n = document.getElementById("n-" + b.id);
+    w.setAttribute("class", "wire " + st);
+    w.style.stroke = st === "off" ? "" : `var(--w-${b.layer})`;
+    if (animate && st === "core") { w.style.animation = "none"; w.getBoundingClientRect(); w.style.animation = ""; }
+    n.setAttribute("class", `node ${st}${picked === b.id ? " picked" : ""}`);
+    const c = n.querySelector("circle"), tc = n.querySelector(".c");
+    c.style.fill = st === "core" ? `var(--t-${b.layer})` : "";
+    c.style.stroke = st === "off" ? "" : `var(--w-${b.layer})`;
+    tc.style.fill = st === "off" ? "" : `var(--w-${b.layer})`;
+  }
+}
+
+/* ---------- RENDER ---------- */
+function renderText(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+  $("#lang-en").setAttribute("aria-pressed", lang === "en");
+  $("#lang-ru").setAttribute("aria-pressed", lang === "ru");
+  $("#coreT").textContent = t("model");
+  for (const b of order) document.querySelector(`#n-${b.id} .n`).textContent = b[lang][0];
+  $("#legend").innerHTML = Object.entries(LAYERS).map(([k,l]) => `<span><i style="background:var(--w-${k})"></i>${l[lang]}</span>`).join("");
+}
+function renderChips(){
+  $("#chips").innerHTML = ROLES.map(r => `<button type="button" class="chip" data-r="${r.id}" aria-pressed="${r.id === role}">${r[lang]}</button>`).join("");
+}
+function renderEq(){
+  const r = R();
+  $("#eq").innerHTML = `<span class="who-is">${r[lang]}</span><span class="op">=</span>`
+    + r.core.map(id => tag(id)).join('<span class="op">+</span>')
+    + (r.extra.length ? '<span class="op">+</span>' + r.extra.map(id => tag(id, true)).join("") : "");
+}
+function renderInfo(){
+  const el = $("#info");
+  if (picked) { const b = byId[picked]; el.className = "info"; el.innerHTML = `<b style="color:var(--w-${b.layer})">${b.id} · ${b[lang][0]}</b><span>${b[lang][1]}</span>`; }
+  else { el.className = "info warn"; el.innerHTML = `<b>${t("watch")}</b><span>${R().pit[lang]}</span>`; }
+}
+function renderPains(){
+  $("#painGrid").innerHTML = PAINS.map((p,i) => `<button type="button" class="pain${flipped.has(i) ? " flip" : ""}" data-i="${i}" aria-pressed="${flipped.has(i)}">
+    <div class="face front"><p class="q">${p[lang][0]}</p><div class="tags">${p.b.map(id => tag(id)).join("")}</div></div>
+    <div class="face back"><span class="flipmark">${t("fix")}</span><p class="fix">${p[lang][1]}</p><div class="tags">${p.b.map(id => tag(id)).join("")}</div></div></button>`).join("");
+}
+function renderStairs(){
+  $("#stairs").innerHTML = LEVELS.map((l,i) => `<div class="stair"><h3>${l[lang][0]}</h3><p>${l[lang][1]}</p>
+    <div class="bar" style="--h:${l.h}px;--a:${l.a}"><span>${i}</span></div>
+    <div class="tags">${l.b.map(id => tag(id)).join("")}</div></div>`).join("");
+}
+function renderCase(){
+  const c = CASES[role], r = R(), name = r[lang].charAt(0).toUpperCase() + r[lang].slice(1);
+  $("#caseTitle").textContent = name + ": " + c.title[lang];
+  $("#caseChips").innerHTML = ROLES.map(x => `<button type="button" class="chip" data-r="${x.id}" aria-pressed="${x.id === role}">${x[lang]}</button>`).join("");
+  $("#profile").textContent = c.starter[lang];
+  $("#lanes").innerHTML = c.lanes.map(l => `<div class="lane"><h3>${l[lang]}</h3><div class="track">${l.steps.map(([id,en,ru]) => {
+    const b = byId[id];
+    return `<span class="st" style="--wire:var(--w-${b.layer});--tint:var(--t-${b.layer})"><b>${id}</b>${lang === "en" ? en : ru}</span>`;
+  }).join('<span class="arrow" aria-hidden="true">→</span>')}</div></div>`).join("");
+}
+function renderAll(){ renderText(); renderChips(); renderEq(); renderInfo(); renderPains(); renderStairs(); renderCase(); paintRig(false); }
+
+/* ---------- EVENTS ---------- */
+buildRig();
+renderAll();
+paintRig(true);
+
+function setRole(e){
+  const c = e.target.closest(".chip"); if (!c) return;
+  role = c.dataset.r; picked = null; store.set("ha2-role", role);
+  renderChips(); renderEq(); renderInfo(); renderCase(); paintRig(true);
+}
+$("#chips").addEventListener("click", setRole);
+$("#caseChips").addEventListener("click", setRole);
+function setLang(l){ if (l === lang) return; lang = l; store.set("ha2-lang", l); renderAll(); }
+$("#lang-en").addEventListener("click", () => setLang("en"));
+$("#lang-ru").addEventListener("click", () => setLang("ru"));
+$("#painGrid").addEventListener("click", e => {
+  const c = e.target.closest(".pain"); if (!c) return;
+  const i = +c.dataset.i; flipped.has(i) ? flipped.delete(i) : flipped.add(i);
+  c.classList.toggle("flip"); c.setAttribute("aria-pressed", flipped.has(i));
+});
+$("#copyBtn").addEventListener("click", async () => {
+  const btn = $("#copyBtn");
+  try { await navigator.clipboard.writeText(CASES[role].starter[lang]); btn.textContent = t("copied"); }
+  catch { const r = document.createRange(); r.selectNodeContents($("#profile")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = t("selected"); }
+  setTimeout(() => btn.textContent = t("copy"), 1800);
+});
+</script>
+
+</body>
+</html>
