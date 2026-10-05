@@ -178,6 +178,7 @@ footer a{color:inherit}
     <nav>
       <a href="./" data-t="navAtlas"></a>
       <a href="setup.html" aria-current="page" data-t="navSetup"></a>
+      <a href="review.html" data-t="navReview"></a>
       <div class="lang" role="group" aria-label="Language">
         <button type="button" id="lang-en" aria-pressed="true">EN</button>
         <button type="button" id="lang-ru" aria-pressed="false">RU</button>
@@ -235,7 +236,7 @@ const LAYER_OF = {CTX:"know",MEM:"know",KB:"know",TOOL:"hands",ACT:"hands",SKILL
 const tag = id => `<span class="tag L-${LAYER_OF[id]}">${id}</span>`;
 
 const T = {
-  navAtlas:{en:"Atlas",ru:"Атлас"}, navSetup:{en:"Our setup",ru:"Наш сетап"},
+  navAtlas:{en:"Atlas",ru:"Атлас"}, navSetup:{en:"Our setup",ru:"Наш сетап"}, navReview:{en:"Review fleet",ru:"Ревью-флот"},
   heroEy:{en:"Field notes",ru:"Полевые заметки"},
   heroH:{en:"How we actually run it.",ru:"Как это работает у нас."},
   heroL:{en:"One home mini-PC, three agents, two model providers and a phone. Our OpenClaw setup, everything that broke, and what made it worth it.",ru:"Один домашний мини-ПК, три агента, два провайдера моделей и телефон. Наш сетап на OpenClaw: что ломалось и что дало буст."},

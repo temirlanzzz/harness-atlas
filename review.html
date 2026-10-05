@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Case: a review agent for every pull request, with a status board for each run, and how to upgrade it with the ten levels of Jev.">
+<title>Review Fleet · Harness Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap">
+<style>
+/* Layout: an ops console. The hero is a working mock of the review board (rows + a detail pane); below it the run lifecycle, the five ideas that make it reliable, and the Jev upgrade ladder. */
+:root{
+  color-scheme:light;
+  --bg:#F1F2F4; --surface:#FFFFFF; --ink:#101217; --muted:#5A6070; --line:#D8DCE3; --soft:#E7EAEF;
+  --w-know:#2E62F0; --w-hands:#B67600; --w-rhythm:#0D8A62; --w-brain:#6E45F0; --w-control:#CF3B33;
+  --t-know:#E5ECFF; --t-hands:#FBEFD6; --t-rhythm:#DBF3EA; --t-brain:#ECE5FF; --t-control:#FBE3E1;
+  --ok:#0D8A62; --run:#2E62F0; --warn:#B67600; --bad:#CF3B33;
+  --f-display:"Unbounded","Onest",system-ui,sans-serif;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:8px;
+  padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0C0E11; --surface:#15181E; --ink:#EDEFF3; --muted:#99A0AD; --line:#2A2F38; --soft:#1E222A;
+  --w-know:#7CA2FF; --w-hands:#F0B43C; --w-rhythm:#43CF9C; --w-brain:#A98CFF; --w-control:#FF7B70;
+  --t-know:#18223F; --t-hands:#31260E; --t-rhythm:#0E2C22; --t-brain:#231C40; --t-control:#381917;
+  --ok:#43CF9C; --run:#7CA2FF; --warn:#F0B43C; --bad:#FF7B70;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0C0E11; --surface:#15181E; --ink:#EDEFF3; --muted:#99A0AD; --line:#2A2F38; --soft:#1E222A;
+  --w-know:#7CA2FF; --w-hands:#F0B43C; --w-rhythm:#43CF9C; --w-brain:#A98CFF; --w-control:#FF7B70;
+  --t-know:#18223F; --t-hands:#31260E; --t-rhythm:#0E2C22; --t-brain:#231C40; --t-control:#381917;
+  --ok:#43CF9C; --run:#7CA2FF; --warn:#F0B43C; --bad:#FF7B70;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--f-body);padding-inline:20px;padding-block:0 40px;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.015em}
+h2{font-size:clamp(26px,3.6vw,40px)}
+h3{font-size:17px}
+p{margin:0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.eyebrow{font:600 12px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:18px}
+.brand{display:flex;align-items:center;gap:10px;font:700 15px/1 var(--f-display);color:inherit;text-decoration:none}
+.mark{display:flex;gap:3px}
+.mark i{width:4px;height:18px;border-radius:2px}
+.top nav{display:flex;align-items:center;gap:20px;font-size:14px}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover,.top nav a[aria-current="page"]{color:var(--ink)}
+.lang{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
+.lang button{appearance:none;border:0;background:transparent;color:var(--muted);font:700 12px/1 var(--f-mono);letter-spacing:.06em;padding:7px 11px;border-radius:999px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 7px;border-radius:5px;font:700 11px/1 var(--f-mono);letter-spacing:.03em;white-space:nowrap}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.L-know{color:var(--w-know);background:var(--t-know)}
+.L-hands{color:var(--w-hands);background:var(--t-hands)}
+.L-rhythm{color:var(--w-rhythm);background:var(--t-rhythm)}
+.L-brain{color:var(--w-brain);background:var(--t-brain)}
+.L-control{color:var(--w-control);background:var(--t-control)}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+
+.hero{padding-block:32px 28px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px;align-items:end}
+.hero h1{font-size:clamp(32px,5vw,60px)}
+.hero .lede{font-size:18px;color:var(--muted);margin-top:16px;max-width:52ch}
+.formula{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.formula .op{font:700 13px/1 var(--f-mono);color:var(--muted)}
+
+/* console */
+.console{border:1px solid var(--line);background:var(--surface);border-radius:12px;overflow:hidden;margin-bottom:56px}
+.cbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 20px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--soft)}
+.cbar .counts{display:flex;flex-wrap:wrap;gap:14px;font:600 12.5px/1 var(--f-mono)}
+.cbar .counts span{display:inline-flex;align-items:center;gap:6px}
+.cbar .counts i{width:8px;height:8px;border-radius:50%}
+.cbar .demo{font:600 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cbody{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.rows{display:grid;align-content:start;border-right:1px solid var(--line)}
+.row{appearance:none;border:0;border-bottom:1px solid var(--line);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;display:grid;grid-template-columns:62px 150px minmax(0,1fr) 84px;gap:12px;align-items:center;padding:13px 16px}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--soft)}
+.row[aria-pressed="true"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--ink)}
+.row .pr{font:700 13px/1 var(--f-mono);color:var(--w-know)}
+.row .ttl{font-size:14px;font-weight:600;line-height:1.3;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .ttl small{display:block;font-weight:400;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .ago{font:500 12px/1.3 var(--f-mono);color:var(--muted);text-align:right}
+.st{display:inline-flex;align-items:center;gap:6px;font:700 10.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap;justify-self:start}
+.st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.st.complete{color:var(--ok)} .st.running{color:var(--run)} .st.attention{color:var(--warn)} .st.exited{color:var(--bad)} .st.queued{color:var(--muted)}
+.st.running::before{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.pane{padding:20px;display:grid;gap:16px;align-content:start;min-width:0}
+.pane h3{font-size:16px;line-height:1.3}
+.pane .meta{font:500 12px/1.4 var(--f-mono);color:var(--muted)}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+.kv div{display:grid;gap:3px;min-width:0}
+.kv dt{font:700 10.5px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kv dd{margin:0;font-size:13.5px;line-height:1.4}
+.kv dd .bad{color:var(--bad);font-weight:600} .kv dd .ok{color:var(--ok);font-weight:600} .kv dd .warn{color:var(--warn);font-weight:600}
+.notice{border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);background:color-mix(in srgb,var(--warn) 9%,var(--surface));border-radius:6px;padding:10px 12px;font-size:13.5px}
+.notice b{color:var(--warn)}
+.notice.good{border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:color-mix(in srgb,var(--ok) 9%,var(--surface))}
+.notice.good b{color:var(--ok)}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.tl li{display:grid;grid-template-columns:72px 14px minmax(0,1fr);gap:8px;font-size:13.5px;align-items:start}
+.tl li .t{font:500 12px/1.6 var(--f-mono);color:var(--muted)}
+.tl li .d{width:9px;height:9px;border-radius:50%;background:var(--line);margin-top:6px;position:relative}
+.tl li:not(:last-child) .d::after{content:"";position:absolute;left:4px;top:9px;width:1px;height:24px;background:var(--line)}
+.tl li{padding-bottom:10px}
+.tl li.on .d{background:var(--ink)}
+
+section{padding-block:60px;border-top:1px solid var(--line)}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px 32px;margin-bottom:28px}
+.head p{max-width:54ch}
+
+/* lifecycle */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:stretch}
+.node{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:16px;display:grid;gap:8px;align-content:start;position:relative}
+.node .st{margin-bottom:2px}
+.node p{font-size:14px;color:var(--muted)}
+.node:not(:last-child)::after{content:"→";position:absolute;right:-12px;top:20px;font:700 14px/1 var(--f-mono);color:var(--muted);background:var(--bg);padding:2px 0}
+.branches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.branch{border:1px dashed var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:6px}
+.branch b{font-size:14.5px}
+.branch span{font-size:13.5px;color:var(--muted)}
+
+/* ideas */
+.ideas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.idea{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:20px;display:grid;gap:10px;align-content:start}
+.idea b{font:700 18px/1.2 var(--f-display)}
+.idea p{font-size:14.5px;color:var(--muted)}
+.idea .ex{font:600 12px/1.5 var(--f-mono);color:var(--ink);background:var(--soft);border-radius:4px;padding:8px 10px}
+.idea:first-child{grid-row:span 2;background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.idea:first-child p{color:inherit;opacity:.8}
+.idea:first-child .ex{background:color-mix(in srgb,var(--bg) 14%,var(--ink));color:var(--bg)}
+
+/* jev ladder */
+.ladder{display:grid;gap:6px}
+.rung{display:grid;grid-template-columns:56px minmax(0,1fr) minmax(0,1.25fr) minmax(0,1.25fr);gap:16px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px 16px}
+.rung .n{font:700 26px/1 var(--f-display);color:var(--muted)}
+.rung h3{font-size:15px}
+.rung h3 small{display:block;font:500 12.5px/1.3 var(--f-body);color:var(--muted);margin-top:3px}
+.rung p{font-size:14px}
+.rung .before{color:var(--muted)}
+.rung .before::before{content:attr(data-l);display:block;font:700 10.5px/1.6 var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.rung .after::before{content:attr(data-l);display:block;font:700 10.5px/1.6 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--w-rhythm)}
+.rung.top{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.rung.top .n,.rung.top .before,.rung.top h3 small{color:inherit;opacity:.8}
+.rung.top .after::before{color:inherit}
+.lhead{display:grid;grid-template-columns:56px minmax(0,1fr) minmax(0,1.25fr) minmax(0,1.25fr);gap:16px;padding:0 16px 6px;font:700 10.5px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.payoff{margin-top:22px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.payoff div{border-top:3px solid var(--w-rhythm);padding-top:12px;display:grid;gap:4px}
+.payoff b{font:700 22px/1.1 var(--f-display)}
+.payoff span{font-size:13.5px;color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding-block:24px 0;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted)}
+footer a{color:inherit}
+
+@media (max-width:980px){
+  .hero{grid-template-columns:1fr;gap:18px}
+  .cbody{grid-template-columns:1fr}
+  .rows{border-right:0;border-bottom:1px solid var(--line)}
+  .flow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .node::after{display:none}
+  .branches,.ideas,.payoff{grid-template-columns:1fr}
+  .idea:first-child{grid-row:auto}
+  .lhead{display:none}
+  .rung{grid-template-columns:44px minmax(0,1fr)}
+  .rung p{grid-column:2}
+}
+@media (max-width:720px){
+  body{padding-inline:16px}
+  .top nav a{display:none}
+  .row{grid-template-columns:54px minmax(0,1fr);row-gap:6px}
+  .row .st{grid-column:2;grid-row:2}
+  .row .ttl{grid-column:2;grid-row:1}
+  .row .ago{grid-column:1;grid-row:2;text-align:left}
+  .kv{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./"><span class="mark" aria-hidden="true"><i style="background:var(--w-know)"></i><i style="background:var(--w-hands)"></i><i style="background:var(--w-rhythm)"></i><i style="background:var(--w-brain)"></i><i style="background:var(--w-control)"></i></span>Harness Atlas</a>
+    <nav>
+      <a href="./" data-t="navAtlas"></a>
+      <a href="setup.html" data-t="navSetup"></a>
+      <a href="review.html" aria-current="page" data-t="navReview"></a>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" id="lang-en" aria-pressed="true">EN</button>
+        <button type="button" id="lang-ru" aria-pressed="false">RU</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <p class="eyebrow" data-t="heroEy"></p>
+      <h1 style="margin-top:14px" data-t="heroH"></h1>
+      <p class="lede" data-t="heroL"></p>
+    </div>
+    <div class="formula" id="formula"></div>
+  </div>
+
+  <div class="console" aria-label="Review board">
+    <div class="cbar"><div class="counts" id="counts"></div><span class="demo" data-t="demo"></span></div>
+    <div class="cbody">
+      <div class="rows" id="rows"></div>
+      <div class="pane" id="pane" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <section id="life">
+    <div class="head"><h2 data-t="lifeT"></h2><p class="muted" data-t="lifeS"></p></div>
+    <div class="flow" id="flow"></div>
+    <div class="branches" id="branches"></div>
+  </section>
+
+  <section id="ideas">
+    <div class="head"><h2 data-t="ideasT"></h2></div>
+    <div class="ideas" id="ideaGrid"></div>
+  </section>
+
+  <section id="jev">
+    <div class="head"><div><p class="eyebrow" data-t="jevEy"></p><h2 style="margin-top:12px" data-t="jevT"></h2></div><p class="muted" data-t="jevS"></p></div>
+    <div class="lhead"><span>#</span><span data-t="colLevel"></span><span data-t="colBefore"></span><span data-t="colAfter"></span></div>
+    <div class="ladder" id="ladder"></div>
+    <div class="payoff" id="payoff"></div>
+  </section>
+
+  <footer>
+    <span data-t="foot"></span>
+    <span><a href="./" data-t="back"></a> · <a href="setup.html" data-t="navSetup"></a></span>
+  </footer>
+</div>
+
+<script>
+const LAYER_OF = {CTX:"know",MEM:"know",KB:"know",TOOL:"hands",ACT:"hands",SKILL:"hands",AUTO:"rhythm",CHAN:"rhythm",ROUTE:"brain",MULTI:"brain",GUARD:"control",EVAL:"control"};
+const tag = id => `<span class="tag L-${LAYER_OF[id]}">${id}</span>`;
+
+const T = {
+  navAtlas:{en:"Atlas",ru:"Атлас"}, navSetup:{en:"Our setup",ru:"Наш сетап"}, navReview:{en:"Review fleet",ru:"Ревью-флот"},
+  heroEy:{en:"Case · team harness",ru:"Кейс · командный харнесс"},
+  heroH:{en:"A review agent for every pull request.",ru:"Агент-ревьюер на каждый пул-реквест."},
+  heroL:{en:"Each PR gets its own review run. One board shows every run: state, attempt, scope, coverage, verdict and the next step. Click a row.",ru:"Каждый PR получает свой запуск ревью. Одна доска показывает все запуски: состояние, попытку, охват, покрытие, вердикт и следующий шаг. Нажми на строку."},
+  demo:{en:"Example data",ru:"Пример данных"},
+  complete:{en:"Complete",ru:"Готово"}, running:{en:"Running",ru:"Идёт"}, attention:{en:"Needs attention",ru:"Нужно внимание"}, exited:{en:"Exited, unswept",ru:"Упал, не разобран"}, queued:{en:"Queued",ru:"В очереди"},
+  attempt:{en:"Current attempt",ru:"Текущая попытка"}, cycle:{en:"Current cycle",ru:"Текущий цикл"}, scope:{en:"Review scope",ru:"Охват ревью"}, cov:{en:"Execution and coverage",ru:"Запуск и покрытие"},
+  reuse:{en:"Evidence reused",ru:"Повторное использование"}, recovery:{en:"Recovery",ru:"Восстановление"}, verdict:{en:"Formal verdict",ru:"Формальный вердикт"}, timeline:{en:"Timeline",ru:"Хронология"},
+  lifeT:{en:"The life of one run",ru:"Жизнь одного запуска"}, lifeS:{en:"A run moves left to right. Three things can go wrong, and each has its own exit.",ru:"Запуск идёт слева направо. Сломаться может в трёх местах, и у каждого свой выход."},
+  ideasT:{en:"Five ideas that make it reliable",ru:"Пять идей, на которых держится надёжность"},
+  jevEy:{en:"Upgrade path",ru:"Как прокачать"},
+  jevT:{en:"The same bot, ten levels of Jev",ru:"Тот же бот, десять уровней Jev"},
+  jevS:{en:"Jev answers typed questions in about 0.3 s for a fraction of a cent. Each level moves one judgment off the expensive reviewer model.",ru:"Jev отвечает на типизированные вопросы примерно за 0,3 с и за доли цента. Каждый уровень снимает одно решение с дорогой модели-ревьюера."},
+  colLevel:{en:"Level",ru:"Уровень"}, colBefore:{en:"Today",ru:"Сейчас"}, colAfter:{en:"With Jev",ru:"С Jev"},
+  foot:{en:"Harness Atlas · review fleet case · October 2026",ru:"Harness Atlas · кейс ревью-флота · октябрь 2026"},
+  back:{en:"← Atlas",ru:"← Атлас"}
+};
+
+const RUNS = [
+  {pr:"#1482", s:"complete", ago:"17h", t:{en:"feat(billing): align plan limits with usage tiers",ru:"feat(billing): лимиты тарифа по уровням использования"}, sub:{en:"Merged · review complete",ru:"Смёрджен · ревью готово"},
+   kv:{attempt:"4m 12s", cycle:"4m 12s", scope:{en:"incremental · 14 files · 31 reused",ru:"инкрементальное · 14 файлов · 31 повторно"}, cov:{en:"<span class='ok'>passed</span> · coverage confirmed · 2 validated findings",ru:"<span class='ok'>прошёл</span> · покрытие подтверждено · 2 проверенных замечания"}, reuse:{en:"Yes, prior coverage compatible",ru:"Да, прошлое покрытие совместимо"}, recovery:{en:"Not needed",ru:"Не нужно"}, verdict:{en:"<span class='ok'>Approve with comments</span>",ru:"<span class='ok'>Одобрить с замечаниями</span>"}},
+   note:{k:"good",en:"Verdict published. Two findings posted inline.",ru:"Вердикт опубликован. Два замечания в коде."},
+   tl:[["17:02",{en:"Review completed",ru:"Ревью завершено"}],["17:01",{en:"Findings validated",ru:"Замечания проверены"}],["16:58",{en:"Attempt 1 started",ru:"Попытка 1 начата"}]]},
+  {pr:"#1487", s:"complete", ago:"12h", t:{en:"fix(search): stop indexing draft documents",ru:"fix(search): не индексировать черновики"}, sub:{en:"Merged · review complete",ru:"Смёрджен · ревью готово"},
+   kv:{attempt:"2m 40s", cycle:"2m 40s", scope:{en:"incremental · 3 files · 0 reused",ru:"инкрементальное · 3 файла · 0 повторно"}, cov:{en:"<span class='ok'>passed</span> · coverage confirmed · 0 findings",ru:"<span class='ok'>прошёл</span> · покрытие подтверждено · 0 замечаний"}, reuse:{en:"No, first review",ru:"Нет, первое ревью"}, recovery:{en:"Not needed",ru:"Не нужно"}, verdict:{en:"Not required (small change)",ru:"Не требуется (мелкое изменение)"}},
+   note:{k:"good",en:"Nothing to flag. Status comment posted.",ru:"Замечаний нет. Статус-комментарий опубликован."},
+   tl:[["21:15",{en:"Review completed",ru:"Ревью завершено"}],["21:12",{en:"Attempt 1 started",ru:"Попытка 1 начата"}]]},
+  {pr:"#1490", s:"running", ago:"now", t:{en:"feat(auth): passkey sign-in",ru:"feat(auth): вход по passkey"}, sub:{en:"Collecting diff and context",ru:"Сбор диффа и контекста"},
+   kv:{attempt:"1m 05s", cycle:"1m 05s", scope:{en:"full review · 46 files",ru:"полное ревью · 46 файлов"}, cov:{en:"running · coverage pending",ru:"идёт · покрытие ожидается"}, reuse:{en:"No, touches auth: full review forced",ru:"Нет, затрагивает auth: принудительно полное ревью"}, recovery:{en:"—",ru:"—"}, verdict:{en:"Pending",ru:"Ожидается"}},
+   note:{k:"",en:"<b>Live.</b> The board updates as the run moves.",ru:"<b>В процессе.</b> Доска обновляется по ходу запуска."},
+   tl:[["09:41",{en:"Attempt 1 started",ru:"Попытка 1 начата"}]]},
+  {pr:"#1474", s:"attention", ago:"2h", t:{en:"feat(backend): record who started each action",ru:"feat(backend): записывать, кто запустил действие"}, sub:{en:"Review needs attention",ru:"Ревью требует внимания"},
+   kv:{attempt:"3m 31s", cycle:"3m 31s", scope:{en:"full review · 109 files · 0 reused · prior coverage incompatible",ru:"полное ревью · 109 файлов · 0 повторно · прошлое покрытие несовместимо"}, cov:{en:"<span class='bad'>failed</span> · coverage pending · 0 validated findings",ru:"<span class='bad'>упал</span> · покрытие ожидается · 0 проверенных замечаний"}, reuse:{en:"No",ru:"Нет"}, recovery:{en:"Report delivered · next step: operator fixes the execution limit, then restarts this commit",ru:"Отчёт доставлен · следующий шаг: оператор снимает ограничение запуска и перезапускает коммит"}, verdict:{en:"<span class='warn'>Withheld</span>",ru:"<span class='warn'>Не выдан</span>"}},
+   note:{k:"",en:"<b>Verdict withheld.</b> Coverage was never confirmed, so only a recommendation comment was posted.",ru:"<b>Вердикт не выдан.</b> Покрытие не подтвердилось, поэтому опубликован только комментарий с рекомендацией."},
+   tl:[["13:30",{en:"Review completed",ru:"Ревью завершено"}],["13:28",{en:"Status comment posted",ru:"Статус-комментарий опубликован"}],["13:27",{en:"Attempt 1 started (new cycle)",ru:"Попытка 1 начата (новый цикл)"}],["yday",{en:"Review completed",ru:"Ревью завершено"}],["yday",{en:"Attempt 1 started",ru:"Попытка 1 начата"}]]},
+  {pr:"#1469", s:"exited", ago:"39h", t:{en:"Untitled PR",ru:"PR без названия"}, sub:{en:"Process exited, awaiting sweep",ru:"Процесс завершился, ждёт разбора"},
+   kv:{attempt:"39h 23m", cycle:"39h 23m", scope:{en:"unknown · diff not collected",ru:"неизвестно · дифф не собран"}, cov:{en:"<span class='bad'>no result</span>",ru:"<span class='bad'>нет результата</span>"}, reuse:{en:"—",ru:"—"}, recovery:{en:"Waiting for the sweeper to classify the exit",ru:"Ждёт, пока чистильщик классифицирует завершение"}, verdict:{en:"Waiting",ru:"Ожидает"}},
+   note:{k:"",en:"<b>Dead run.</b> The worker is gone but the run was never closed. A sweeper must decide: retry, fail or ignore.",ru:"<b>Мёртвый запуск.</b> Воркер исчез, а запуск не закрыт. Чистильщик должен решить: повтор, провал или игнор."},
+   tl:[["2d",{en:"Process exited without a result",ru:"Процесс завершился без результата"}],["2d",{en:"Attempt 1 started",ru:"Попытка 1 начата"}]]},
+  {pr:"#1493", s:"queued", ago:"1m", t:{en:"chore(deps): bump the date library",ru:"chore(deps): обновить библиотеку дат"}, sub:{en:"Waiting for a free reviewer",ru:"Ждёт свободного ревьюера"},
+   kv:{attempt:"—", cycle:"—", scope:{en:"planned: incremental",ru:"план: инкрементальное"}, cov:{en:"—",ru:"—"}, reuse:{en:"—",ru:"—"}, recovery:{en:"—",ru:"—"}, verdict:{en:"—",ru:"—"}},
+   note:{k:"",en:"<b>Queued.</b> Dependency bumps wait behind riskier PRs.",ru:"<b>В очереди.</b> Обновления зависимостей ждут после более рискованных PR."},
+   tl:[["09:43",{en:"Webhook received",ru:"Получен вебхук"}]]}
+];
+
+const FLOW = [
+  {s:"queued", en:["Trigger","A PR opens or gets a new commit. The webhook creates a run."],ru:["Триггер","Открыт PR или пришёл новый коммит. Вебхук создаёт запуск."]},
+  {s:"running", en:["Collect","Diff, changed files, the previous review of this PR, if any."],ru:["Сбор","Дифф, изменённые файлы, прошлое ревью этого PR, если было."]},
+  {s:"running", en:["Scope","Full review, or incremental with reused evidence when prior coverage still fits."],ru:["Охват","Полное ревью или инкрементальное, если прошлое покрытие ещё подходит."]},
+  {s:"running", en:["Review and validate","The model reviews, then every finding is checked before it counts."],ru:["Ревью и проверка","Модель ревьюит, потом каждое замечание проверяется, прежде чем засчитать."]},
+  {s:"complete", en:["Publish","A formal verdict if coverage is confirmed. Otherwise only a recommendation."],ru:["Публикация","Формальный вердикт, если покрытие подтверждено. Иначе только рекомендация."]}
+];
+const BRANCHES = [
+  {en:["Execution fails","Run stops with a clear next step for the operator. The board shows it as needs attention."],ru:["Запуск упал","Запуск останавливается с понятным следующим шагом для оператора. На доске — «нужно внимание»."]},
+  {en:["Worker dies","The process exits without closing the run. A sweeper finds it and classifies the exit."],ru:["Воркер умер","Процесс завершился, не закрыв запуск. Чистильщик находит его и классифицирует."]},
+  {en:["New commit arrives","A new cycle starts. Attempts reset, history stays."],ru:["Пришёл новый коммит","Начинается новый цикл. Попытки сбрасываются, история остаётся."]}
+];
+
+const IDEAS = [
+  {en:["No coverage, no verdict","The bot may comment anytime, but it only gives a formal approve or reject when it can prove it read what changed. Otherwise the verdict is withheld and it says why.","verdict: withheld · reason: coverage pending"],
+   ru:["Нет покрытия — нет вердикта","Бот может комментировать всегда, но формально одобряет или отклоняет, только если может доказать, что прочитал изменения. Иначе вердикт не выдаётся, с объяснением почему.","verdict: withheld · reason: coverage pending"]},
+  {en:["Attempt is not cycle","An attempt is one try. A cycle is one commit. Retries add attempts; a new commit starts a new cycle.","cycle 2 · attempt 3"],
+   ru:["Попытка — не цикл","Попытка — одна попытка. Цикл — один коммит. Повторы добавляют попытки, новый коммит начинает новый цикл.","cycle 2 · attempt 3"]},
+  {en:["Reuse evidence","Unchanged files keep last cycle's findings when the old coverage is still compatible. Big PRs get cheaper on every push.","14 primary · 31 reused"],
+   ru:["Переиспользуй доказательства","Неизменённые файлы сохраняют замечания прошлого цикла, если старое покрытие совместимо. Большие PR дешевеют с каждым пушем.","14 primary · 31 reused"]},
+  {en:["A sweeper for dead runs","Workers crash. Runs that exited without a result are found and classified, instead of hanging as running forever.","exited_unswept → retry"],
+   ru:["Чистильщик мёртвых запусков","Воркеры падают. Запуски без результата находятся и классифицируются, а не висят «в процессе» вечно.","exited_unswept → retry"]},
+  {en:["Always a next step","Every stuck run says what a human should do next. The board is a to-do list, not a log.","next: fix limit, restart commit"],
+   ru:["Всегда следующий шаг","Каждый застрявший запуск говорит, что человеку сделать дальше. Доска — это список дел, а не лог.","next: fix limit, restart commit"]}
+];
+
+const LADDER = [
+  {en:["Single decision","one yes or no"],ru:["Одиночное решение","одно да или нет"], b:{en:"Every PR gets the same review depth.",ru:"Каждый PR получает одинаковую глубину ревью."}, a:{en:"“Does this diff touch money, auth or migrations?” Yes forces a full review.",ru:"«Затрагивает ли дифф деньги, авторизацию или миграции?» Да — принудительно полное ревью."}},
+  {en:["Multiple choice","pick a recipe"],ru:["Выбор из вариантов","выбрать рецепт"], b:{en:"One prompt for docs, refactors and features alike.",ru:"Один промпт и для документации, и для рефакторинга, и для фич."}, a:{en:"Classify the PR: docs, refactor, feature, fix, dependency. Each gets its own review checklist.",ru:"Классифицировать PR: документация, рефакторинг, фича, фикс, зависимость. У каждого свой чек-лист."}},
+  {en:["Composite scoring","risk in the queue"],ru:["Составная оценка","риск в очереди"], b:{en:"First in, first out.",ru:"Кто первый пришёл, тот первый."}, a:{en:"Risk = Jev severity × diff size × hot paths touched. Riskiest PR is reviewed first.",ru:"Риск = серьёзность от Jev × размер диффа × горячие пути. Самый рискованный PR ревьюится первым."}},
+  {en:["Confidence gating","who decides"],ru:["Порог уверенности","кто решает"], b:{en:"The bot either approves or it doesn't.",ru:"Бот либо одобряет, либо нет."}, a:{en:"Auto-approve only trivial PRs above 0.9 confidence. Below 0.5, a human is assigned.",ru:"Автоодобрение только тривиальных PR с уверенностью выше 0,9. Ниже 0,5 назначается человек."}},
+  {en:["Model routing","right reviewer"],ru:["Роутинг моделей","нужный ревьюер"], b:{en:"The strongest model on every typo fix.",ru:"Самая сильная модель даже на исправление опечатки."}, a:{en:"Small and safe goes to a fast model. Risky gets the strong model plus a second reviewer.",ru:"Мелкое и безопасное — быстрой модели. Рискованное — сильной модели плюс второй ревьюер."}},
+  {en:["Guardrail hooks","before tools run"],ru:["Хуки-ограничения","до запуска инструментов"], b:{en:"PR text goes straight into the reviewer's context.",ru:"Текст PR сразу попадает в контекст ревьюера."}, a:{en:"Flag “ignore previous instructions” in PR bodies and diffs as data. Block writes outside the PR's own comments.",ru:"Помечать «ignore previous instructions» в описаниях и диффах как данные. Запрещать запись вне комментариев своего PR."}},
+  {en:["Should I compact","long reviews"],ru:["Пора ли сжимать","длинные ревью"], b:{en:"A 109-file review runs until the context is full.",ru:"Ревью на 109 файлов идёт, пока не кончится контекст."}, a:{en:"Compact between file batches when a batch is done, keeping only validated findings.",ru:"Сжимать между пачками файлов, когда пачка закончена, оставляя только проверенные замечания."}},
+  {en:["Cheap reads","read only what matters"],ru:["Дешёвое чтение","читать только нужное"], b:{en:"The model reads a file to decide whether it matters.",ru:"Модель читает файл, чтобы понять, важен ли он."}, a:{en:"“Is this file relevant to the finding?” answered without loading it.",ru:"«Относится ли этот файл к замечанию?» — ответ без загрузки файла."}},
+  {en:["Files at scale","all changed files at once"],ru:["Файлы пачкой","все изменённые файлы сразу"], b:{en:"All 109 files go through the expensive model.",ru:"Все 109 файлов проходят через дорогую модель."}, a:{en:"Ask every changed file in parallel: public API? tests? security? Only flagged files get a full read.",ru:"Спросить все изменённые файлы параллельно: публичный API? тесты? безопасность? Полностью читаются только отмеченные."}},
+  {en:["Agentic Jev","the reviewer asks"],ru:["Агентный Jev","ревьюер спрашивает сам"], b:{en:"Exited runs wait for a sweeper. Red tests need a human to read the log.",ru:"Упавшие запуски ждут чистильщика. Красные тесты читает человек."}, a:{en:"The reviewer runs the tests through ask_jev and asks: bug in code, wrong test, environment or flaky? The sweeper asks the same of every dead run's log tail.",ru:"Ревьюер запускает тесты через ask_jev и спрашивает: баг в коде, неверный тест, окружение или флак? Чистильщик спрашивает то же у хвоста лога каждого мёртвого запуска."}}
+];
+
+const PAYOFF = [
+  {n:{en:"−80%",ru:"−80%"}, t:{en:"files read in full on a big PR, if 1 in 5 is flagged (level 9)",ru:"файлов читается целиком в большом PR, если отмечен каждый пятый (уровень 9)"}},
+  {n:{en:"≈0.3 s",ru:"≈0,3 с"}, t:{en:"to triage a dead run instead of waiting for a person (level 10)",ru:"на разбор мёртвого запуска вместо ожидания человека (уровень 10)"}},
+  {n:{en:"1 queue",ru:"1 очередь"}, t:{en:"ordered by risk, not by arrival time (level 3)",ru:"по риску, а не по времени прихода (уровень 3)"}}
+];
+
+const store = {get(k){try{return localStorage.getItem(k)}catch{return null}}, set(k,v){try{localStorage.setItem(k,v)}catch{}}};
+let lang = location.hash === "#ru" ? "ru" : location.hash === "#en" ? "en" : (store.get("ha2-lang") || "en");
+let sel = "#1474";
+const $ = s => document.querySelector(s);
+
+function pane(){
+  const r = RUNS.find(x => x.pr === sel), L = lang, v = k => typeof r.kv[k] === "string" ? r.kv[k] : r.kv[k][L];
+  $("#pane").innerHTML = `<div><h3>PR ${r.pr}: ${r.t[L]}</h3><p class="meta">review-bot · reviewer=agent-7 · head 3f9c…a21</p></div>
+    <dl class="kv">${["attempt","cycle","scope","cov","reuse","recovery","verdict"].map(k => `<div${k === "recovery" ? ' style="grid-column:1/-1"' : ""}><dt>${T[k][L]}</dt><dd>${v(k)}</dd></div>`).join("")}</dl>
+    <div class="notice ${r.note.k}">${r.note[L]}</div>
+    <div><p class="eyebrow" style="margin-bottom:12px">${T.timeline[L]}</p><ol class="tl">${r.tl.map(([t,d],i) => `<li class="${i === 0 ? "on" : ""}"><span class="t">${t}</span><span class="d"></span><span>${d[L]}</span></li>`).join("")}</ol></div>`;
+}
+function render(){
+  const L = lang;
+  document.documentElement.lang = L;
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = T[el.dataset.t][L]);
+  $("#lang-en").setAttribute("aria-pressed", L === "en");
+  $("#lang-ru").setAttribute("aria-pressed", L === "ru");
+  $("#formula").innerHTML = ["TOOL","AUTO","MULTI","EVAL","GUARD","MEM","CHAN"].map(tag).join('<span class="op">+</span>');
+  const col = {complete:"--ok",running:"--run",attention:"--warn",exited:"--bad",queued:"--muted"};
+  $("#counts").innerHTML = Object.keys(col).map(s => `<span><i style="background:var(${col[s]})"></i>${T[s][L]} ${RUNS.filter(r => r.s === s).length}</span>`).join("");
+  $("#rows").innerHTML = RUNS.map(r => `<button type="button" class="row" data-pr="${r.pr}" aria-pressed="${r.pr === sel}"><span class="pr">${r.pr}</span><span class="st ${r.s}">${T[r.s][L]}</span><span class="ttl">${r.t[L]}<small>${r.sub[L]}</small></span><span class="ago">${r.ago === "now" ? (L === "en" ? "now" : "сейчас") : r.ago + (L === "en" ? " ago" : " назад")}</span></button>`).join("");
+  pane();
+  $("#flow").innerHTML = FLOW.map(f => `<div class="node"><span class="st ${f.s}">${T[f.s][L]}</span><h3>${f[L][0]}</h3><p>${f[L][1]}</p></div>`).join("");
+  $("#branches").innerHTML = BRANCHES.map(b => `<div class="branch"><b>${b[L][0]}</b><span>${b[L][1]}</span></div>`).join("");
+  $("#ideaGrid").innerHTML = IDEAS.map(i => `<div class="idea"><b>${i[L][0]}</b><p>${i[L][1]}</p><span class="ex">${i[L][2]}</span></div>`).join("");
+  $("#ladder").innerHTML = LADDER.map((r,i) => `<div class="rung${i === 9 ? " top" : ""}"><span class="n">${i+1}</span><h3>${r[L][0]}<small>${r[L][1]}</small></h3><p class="before" data-l="${T.colBefore[L]}">${r.b[L]}</p><p class="after" data-l="${T.colAfter[L]}">${r.a[L]}</p></div>`).join("");
+  $("#payoff").innerHTML = PAYOFF.map(p => `<div><b>${p.n[L]}</b><span>${p.t[L]}</span></div>`).join("");
+}
+render();
+$("#rows").addEventListener("click", e => { const b = e.target.closest(".row"); if (!b) return; sel = b.dataset.pr; document.querySelectorAll(".row").forEach(x => x.setAttribute("aria-pressed", x.dataset.pr === sel)); pane(); });
+function setLang(l){ if (l === lang) return; lang = l; store.set("ha2-lang", l); render(); }
+$("#lang-en").addEventListener("click", () => setLang("en"));
+$("#lang-ru").addEventListener("click", () => setLang("ru"));
+</script>
+</body>
+</html>
